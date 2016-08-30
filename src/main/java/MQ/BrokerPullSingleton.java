@@ -30,8 +30,8 @@ public class BrokerPullSingleton extends Thread {
              */
             String  a = puller.recvStr();
             String  b = puller.recvStr();
-            if(MessageQueueMap.getByName(a) == null) {
-                MessageQueueMap.putByName(a);
+            if(MQ.MessageQueueMap.getByName(a) == null) {
+                MQ.MessageQueueMap.putByName(a);
                 ZMQ.Socket pushToMQService = context.socket(ZMQ.PUSH);
                 pushToMQService.bind("serviceaddress:端口");
                 if(a.contains("Queue"))
