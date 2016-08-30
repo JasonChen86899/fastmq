@@ -1,4 +1,2 @@
 # Projects
-This is my individual projects include ThreadPool and Middleware
-
-Some Projects including Java Multi-thread and Concurrency Programming
+FastMQ based on zeromq(Jeromq) is aimed to build simple and fast MQServicers that Cloud Platform or Web Service can use
