@@ -3,5 +3,25 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
-<context:component-scan base-package="MQ"/>
+    <context:component-scan base-package="MQ"/>
+
+    <!--注入启动的消息服务服务器-->
+    <bean id="mqService" class="MQ.MQService">
+        <constructor-arg index="0" type="java.lang.String">
+            <value>tcp://localhost:8888</value>
+        </constructor-arg>
+    </bean>
+
+    <!--注入zmq用来进行参数的注入-->
+    <bean id="zmq" class="org.zeromq.ZMQ"></bean>
+
+    <bean id="brokerPullSingleton" class="MQ.BrokerPullSingleton">
+        <constructor-arg index="0">
+            <value>tcp://localhost:8889</value>
+        </constructor-arg>
+        <constructor-arg index="1">
+            <value>tcp://localhost:8888</value>
+        </constructor-arg>
+    </bean>
+
 </beans>

@@ -56,12 +56,20 @@ public class BrokerPush extends Thread {
     public void run(){
         if(type == ZMQ.PUSH){
             while (flag){
-                doSend((String)mq.getFirst());
+                /**
+                 * 这里暂时以打印为演示，方便调试
+                 */
+                //doSend((String)mq.getFirst());
+                System.out.println((String)mq.getFirst());
             }
         }
         if(type == ZMQ.PUB){
             while (flag){
-                doSubSend((String)mq.getFirst(),topicName);
+                /**
+                 * 这里暂时以打印为演示，方便调试
+                 */
+                //doSubSend((String)mq.getFirst(),topicName);
+                System.out.println((String)mq.getFirst());
             }
         }
     }

@@ -6,38 +6,49 @@ package MQ;
 
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.ContextConfiguration;
 import org.zeromq.ZMQ;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 此客户端可以和Spring进行结合
  */
-@Component
+
 //@ContextConfiguration(locations = "classpath:applicationContext.xml")
 public class MQService extends Thread {
+    private static AtomicInteger atomicInteger =new AtomicInteger(1);
     @Autowired
     private BrokerPullSingleton brokerPullSingleton;
     private String ServiceAddress;
     private ZMQ.Context context;
     private ZMQ.Socket transfer;
-    public MQService(int type,String adr){
+    public MQService(String adr){
         this.ServiceAddress = adr;
         this.context = ZMQ.context(1);
-        this.transfer = context.socket(type);
+        this.transfer = context.socket(ZMQ.PULL);
+        transfer.bind(ServiceAddress);
     }
     public void run(){
+        System.out.println("创建了pull单例线程");
         brokerPullSingleton.start();
         String key =null;
+        String pushAddress = handleTcpAddress();
         while (true) {
-            if ((key = transfer.recvStr()).contains("Queue"))
-                new BrokerPush(ServiceAddress, ZMQ.PUSH, MessageQueueMap.getByName(key)).start();
-            if ((key = transfer.recvStr()).contains("Topic"))
-                new BrokerPush(ServiceAddress, ZMQ.PUB, key, MessageQueueMap.getByName(key)).start();
+            if ((key = transfer.recvStr()).contains("Queue")) {
+                System.out.println("创建了队列push线程");
+                new BrokerPush(pushAddress, ZMQ.PUSH, MessageQueueMap.getByName(key)).start();
+            }
+            if ((key = transfer.recvStr()).contains("Topic")) {
+                System.out.println("创建了主题push线程");
+                new BrokerPush(pushAddress, ZMQ.PUB, key, MessageQueueMap.getByName(key)).start();
+            }
         }
     }
 
-
-
+    private String handleTcpAddress(){
+        String pre = ServiceAddress.substring(0,ServiceAddress.length()-4);
+        String post ="888"+atomicInteger.getAndIncrement();
+        return pre+post;
+    }
 
 }
