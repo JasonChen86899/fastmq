@@ -4,7 +4,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.SynchronousQueue;
 
 /**
  * Created by I330347 on 2016/8/30.
@@ -22,5 +21,6 @@ public class MessageQueueMap {
     //public static SynchronousQueue getByQueueName(String queueName){
         //return queueMap.get(queueName);
     //}
+
 
 }

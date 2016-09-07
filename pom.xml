@@ -62,6 +62,10 @@
             <version>RELEASE</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.adyliu</groupId>
+            <artifactId>zkclient</artifactId>
+            <version>2.0</version>
+        </dependency>
     </dependencies>
-
 </project>
