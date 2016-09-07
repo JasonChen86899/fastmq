@@ -6,7 +6,7 @@ import org.zeromq.ZMQ;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
- * Created by I330347 on 2016/8/27.
+ * Created by Jason Chen on 2016/8/27.
  */
 public class BrokerPush extends Thread {
     private String topicName;

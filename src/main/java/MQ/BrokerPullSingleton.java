@@ -3,7 +3,7 @@ package MQ;
 import org.zeromq.ZMQ;
 
 /**
- * Created by I330347 on 2016/8/30.
+ * Created by Jason Chen on 2016/8/30.
  */
 
 public class BrokerPullSingleton extends Thread {

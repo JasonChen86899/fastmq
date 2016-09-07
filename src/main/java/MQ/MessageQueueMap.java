@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
- * Created by I330347 on 2016/8/30.
+ * Created by Jason Chen on 2016/8/30.
  */
 @Component
 public class MessageQueueMap {
