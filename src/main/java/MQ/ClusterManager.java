@@ -6,9 +6,10 @@ import org.apache.zookeeper.CreateMode;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 /**
- * Created by I330347 on 2016/9/5.
+ * Created by Jason Chen on 2016/9/5.
  */
 public class ClusterManager extends Thread {
     /**
@@ -56,13 +57,12 @@ public class ClusterManager extends Thread {
 
     public void run(){
         SubscribeChildChanges();
-        try {
+        for(;;){
             while (interruptFalg.intValue()==1){
-
+                //这里可以跟日志接口进行对接，记录监控进程的运行情况
             }
-        }catch (Exception e){
-            System.out.println("ClusterManager was Interruoted");
+            LockSupport.park(Thread.currentThread());//阻塞当前的线程
         }
     }
-    
+
 }
