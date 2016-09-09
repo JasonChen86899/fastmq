@@ -24,4 +24,10 @@
         </constructor-arg>
     </bean>
 
+    <bean id="setupFastMQ" class="MQ.SetupFastMQ">
+        <constructor-arg index="0">
+            <value>tcp://localhost:8000</value>
+        </constructor-arg>
+    </bean>
+
 </beans>
