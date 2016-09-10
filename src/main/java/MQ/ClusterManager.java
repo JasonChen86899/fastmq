@@ -107,5 +107,5 @@ public class ClusterManager extends Thread {
             Thread.currentThread().interrupt();//写上中断标志位
         }
     }
-
+    
 }
