@@ -78,12 +78,9 @@ public class SetupFastMQ extends Thread {
                 String preNodeipAddress = mqServer.get(isGetTheLock - 1);
                 final CountDownLatch latch = new CountDownLatch(1);
                 final IZkDataListener iZkDataListener = new IZkDataListener() {
-                    @Override
                     public void handleDataChange(String dataPath, byte[] data) throws Exception {
 
                     }
-
-                    @Override
                     public void handleDataDeleted(String dataPath) throws Exception {
                         latch.countDown();
                     }
