@@ -1,8 +1,14 @@
 package MQ;
 
+import com.caucho.hessian.io.Hessian2Output;
+import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by Jason Chen on 2016/9/29.
@@ -18,6 +24,10 @@ public class RocksDBUtil {
      */
     private static Options options;
     private static RocksDB db;
+    /**
+     * 查看RocksDB 源码，里面没有List<ColumnFamilyHandle> 来记录列簇信息，这里用来记录这个信息
+     */
+    private static ArrayList<ColumnFamilyHandle> columnFamilyHandles;
 
     public static void openDatabase(){
         // a static method that loads the RocksDB C++ library.
@@ -36,5 +46,27 @@ public class RocksDBUtil {
         if(db != null)
             db.close();
         options.dispose();
+    }
+
+    public static void putObject(Object key,Object value) throws IOException, RocksDBException {
+        ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+        Hessian2Output hessian2Output = new Hessian2Output(byteArray);
+        hessian2Output.writeObject(key);
+        byte[] keyBytes = byteArray.toByteArray();
+        hessian2Output.reset();
+        hessian2Output.writeObject(value);
+        byte[] valueBytes = byteArray.toByteArray();
+        //db的open 静态方法有 关于初始化db时列簇和相应的列簇名的设置，不过也以后地动态添加
+        ColumnFamilyHandle cf;
+        db.put(cf=db.createColumnFamily("topic_name"),keyBytes,valueBytes);
+        columnFamilyHandles.add(cf);
+    }
+
+    public static void getObject(String columFamily_topic_name, Object key) throws IOException {
+        ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+        Hessian2Output hessian2Output = new Hessian2Output(byteArray);
+        hessian2Output.writeObject(key);
+        byte[] keyBytes = byteArray.toByteArray();
+        columnFamilyHandles.stream().forEach(columnFamilyHandle -> {});
     }
 }
