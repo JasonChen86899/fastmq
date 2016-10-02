@@ -1,4 +1,4 @@
-package MQ;
+package MQ.Storage;
 
 import com.caucho.hessian.io.Hessian2Output;
 import org.rocksdb.ColumnFamilyHandle;
