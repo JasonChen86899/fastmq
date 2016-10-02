@@ -8,7 +8,8 @@ import org.rocksdb.RocksDBException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Created by Jason Chen on 2016/9/29.
@@ -27,7 +28,12 @@ public class RocksDBUtil {
     /**
      * 查看RocksDB 源码，里面没有List<ColumnFamilyHandle> 来记录列簇信息，这里用来记录这个信息
      */
-    private static ArrayList<ColumnFamilyHandle> columnFamilyHandles;
+    private static final ConcurrentLinkedDeque<ColumnFamilyHandle> columnFamilyHandles = new ConcurrentLinkedDeque<>();
+
+    /**
+     * 建立ConcurrentHashMap ，记录列簇名(key),ColumnFamilyHandle(value) 记录列簇名和列簇实例
+     */
+    private static final ConcurrentHashMap<String,ColumnFamilyHandle> columnFamily_Name_Map = new ConcurrentHashMap<>();
 
     public static void openDatabase(){
         // a static method that loads the RocksDB C++ library.
@@ -48,7 +54,7 @@ public class RocksDBUtil {
         options.dispose();
     }
 
-    public static void putObject(Object key,Object value) throws IOException, RocksDBException {
+    public static void putObject(Object key,Object value,String topic_name) throws IOException, RocksDBException {
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output(byteArray);
         hessian2Output.writeObject(key);
@@ -57,16 +63,21 @@ public class RocksDBUtil {
         hessian2Output.writeObject(value);
         byte[] valueBytes = byteArray.toByteArray();
         //db的open 静态方法有 关于初始化db时列簇和相应的列簇名的设置，不过也以后地动态添加
-        ColumnFamilyHandle cf;
-        db.put(cf=db.createColumnFamily("topic_name"),keyBytes,valueBytes);
-        columnFamilyHandles.add(cf);
+        ColumnFamilyHandle cf=db.createColumnFamily(topic_name);
+        db.put(cf,keyBytes,valueBytes);
+        if(!columnFamily_Name_Map.containsKey(topic_name)) {
+            columnFamilyHandles.add(cf);
+            columnFamily_Name_Map.put(topic_name, cf);
+        }
     }
 
-    public static void getObject(String columFamily_topic_name, Object key) throws IOException {
+    public static void getObject(String columFamily_topic_name, Object key) throws IOException, RocksDBException {
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output(byteArray);
         hessian2Output.writeObject(key);
         byte[] keyBytes = byteArray.toByteArray();
-        columnFamilyHandles.stream().forEach(columnFamilyHandle -> {});
+        if(columnFamily_Name_Map.containsKey(columFamily_topic_name)){
+            db.get(columnFamily_Name_Map.get(columFamily_topic_name),keyBytes);
+        }
     }
 }
