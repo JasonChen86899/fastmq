@@ -1,7 +1,8 @@
 package MQ;
 
 import com.github.zkclient.ZkClient;
-import org.apache.zookeeper.CreateMode;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 import java.util.concurrent.locks.LockSupport;
@@ -9,6 +10,7 @@ import java.util.concurrent.locks.LockSupport;
 /**
  * Created by Jason Chen on 2016/9/5.
  */
+@Configuration
 public class ClusterManager extends Thread {
     /**
      * 建立连接，创建持久点进行消费服务器的注册
@@ -25,8 +27,6 @@ public class ClusterManager extends Thread {
         String Zkservers = "127.0.0.1:8880,127.0.0.1:8881,127.0.0.1:8881";
         zkClient = new ZkClient(Zkservers,10000,10000);
         System.out.println("connect ok!");
-        String MessageConsumer = "MessageConsumer";
-        String path = zkClient.create("/Messageconsumer",MessageConsumer.getBytes(), CreateMode.PERSISTENT);
     }
 
     public static void creatChildNode(String data){
@@ -84,6 +84,7 @@ public class ClusterManager extends Thread {
         return zkClient.getChildren("/MQServers");
     }
 
+    @Bean
     public static ZkClient getZkClient(){
         if(zkClient != null)
             return zkClient;
