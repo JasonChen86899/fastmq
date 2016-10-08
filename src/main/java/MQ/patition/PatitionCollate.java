@@ -42,7 +42,7 @@ public class PatitionCollate {
     /**
      * 注册 topic 事件，进行主题 分区数量的设定
      * @param topic_name
-     * @param paitionNum
+     * @param paitionNum 由于 int（四个字节） 转 byte （1个字节），会丢失钱3个字节，所以取值范围为 1-255
      * @throws IOException
      */
     public static void registTopicEvent(final String topic_name, final int paitionNum) throws IOException {
@@ -54,7 +54,10 @@ public class PatitionCollate {
             ipList = ipList.subList(0,paitionNum-1);
         hessian2Output.writeObject(ipList);
         byte[] bytes = byteArrayOutputStream.toByteArray();
-        zkClient.writeData("/"+topic_name,bytes);
+        zkClient.createEphemeral("/MessageData/"+topic_name);
+        zkClient.writeData("/MessageData/"+topic_name,bytes);
+        zkClient.createEphemeral("/PatitionNum/"+topic_name);
+        zkClient.writeData("/PatitionNum/"+topic_name,new byte[]{(byte)paitionNum});
         final IZkStateListener iZkStateListener = new IZkStateListener() {
             @Override
             public void handleStateChanged(Watcher.Event.KeeperState state) throws Exception {
@@ -65,7 +68,8 @@ public class PatitionCollate {
                     ipList = ipList.subList(0,paitionNum-1);
                 hessian2Output.writeObject(ipList);
                 byte[] bytes = byteArrayOutputStream.toByteArray();
-                zkClient.writeData("/MessageData"+topic_name,bytes);
+                zkClient.writeData("/MessageData/"+topic_name,bytes);
+
             }
 
             @Override
@@ -83,20 +87,25 @@ public class PatitionCollate {
      * 这里是一个有别于kafka patition 的负载均衡和备份机制，也许就是一点点创新的地方吧
      * 数据持久化方案则需要采取不同的方案，但是则需要数据的主从备份，甚至可以将数据持久化单独独立出来，这样性能就完全需要
      * 闪存来保证
-     * -->单线程先从客户端拉数据，然后在各个broker上进行分发存储，保持数据的一致，然后各个broker从自己闪存中去数据，然后
-     * 创建队列，由消费者消费
+     * -->单线程先从客户端拉数据，然后在各个broker上进行分发存储，保持数据的一致，然后各个broker从自己闪存中取数据，
+     * topic队列的 keyMessage 还是由 （这个函数去分区，传输给相应的broker 机器）
      * @param topic_name
      * @param keyMessage
      * @return
      * @throws IOException
      */
     public static String setTopicPatiton(String topic_name,KeyMessage<Object,Object> keyMessage) throws IOException {
-        byte[] bytes = zkClient.readData("/MessageData"+topic_name);
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(bytes);
+        byte[] ipAddressbytes = zkClient.readData("/MessageData/"+topic_name);
+        byte[] patitionNum = zkClient.readData("/PatitionNum/"+topic_name);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(ipAddressbytes);
         Hessian2Input hessian2Input = new Hessian2Input(byteArrayInputStream);
+        int pnum = patitionNum[0];
         List<String> ipList = (List)hessian2Input.readObject();
-        return ipList.get(keyMessage.getKey().hashCode()%ipList.size()-1);
-    }
+        /**
+         * 这边采用两次取模，分配到具体的ip主机
+         */
+        return ipList.get((keyMessage.getKey().hashCode()%pnum%ipList.size())-1);
 
+    }
 
 }
