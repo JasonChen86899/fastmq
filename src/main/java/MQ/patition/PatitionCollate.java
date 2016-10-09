@@ -16,13 +16,18 @@ import org.springframework.stereotype.Component;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 分区策略
  */
 @Component
 public class PatitionCollate {
+
+    private static AtomicInteger expectedVersion = new AtomicInteger(0);
 
     private static ZkClient zkClient;
 
@@ -48,7 +53,8 @@ public class PatitionCollate {
     public static void registTopicEvent(final String topic_name, final int paitionNum) throws IOException {
         zkClient.createEphemeral("/"+topic_name);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        Hessian2Output hessian2Output = new Hessian2Output(byteArrayOutputStream);
+        Hessian2Output hessian2Output = new Hessian2Output();
+        hessian2Output.init(byteArrayOutputStream);
         List<String> ipList= zkClient.getChildren("/MQServers");
         if(ipList.size()>paitionNum)
             ipList = ipList.subList(0,paitionNum-1);
@@ -58,17 +64,33 @@ public class PatitionCollate {
         zkClient.writeData("/MessageData/"+topic_name,bytes);
         zkClient.createEphemeral("/PatitionNum/"+topic_name);
         zkClient.writeData("/PatitionNum/"+topic_name,new byte[]{(byte)paitionNum});
+        if(zkClient.exists("/PatitionInfo"))
+            zkClient.createPersistent("/PatitionInfo");
+        hessian2Output.flush();
+        ByteArrayOutputStream byteArray_PatitionIndfo = new ByteArrayOutputStream();
+        hessian2Output.writeObject(new HashMap<String,ArrayList<Integer>>());
+        zkClient.writeData("/PatitionInfo",byteArray_PatitionIndfo.toByteArray());
         final IZkStateListener iZkStateListener = new IZkStateListener() {
             @Override
             public void handleStateChanged(Watcher.Event.KeeperState state) throws Exception {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                Hessian2Output hessian2Output = new Hessian2Output(byteArrayOutputStream);
+                Hessian2Output hessian2Output = new Hessian2Output();
+                hessian2Output.init(byteArrayOutputStream);
                 List<String> ipList= zkClient.getChildren("/MQServers");
                 if(ipList.size()>paitionNum)
                     ipList = ipList.subList(0,paitionNum-1);
                 hessian2Output.writeObject(ipList);
                 byte[] bytes = byteArrayOutputStream.toByteArray();
                 zkClient.writeData("/MessageData/"+topic_name,bytes);
+                //分为两种情况：
+                // 1.MQ宕机；2.MQ拓展
+                ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(zkClient.readData("/PatitionInfo"));
+                Hessian2Input hessian2Input = new Hessian2Input();
+                hessian2Input.init(byteArrayInputStream);
+                HashMap<String,HashMap<String,ArrayList<Integer>>> map = (HashMap<String,HashMap<String,ArrayList<Integer>>>)hessian2Input.readObject();
+                if(map.keySet().size()<ipList.size()){
+
+                }
 
             }
 
@@ -78,10 +100,45 @@ public class PatitionCollate {
             }
         };
         zkClient.subscribeStateChanges(iZkStateListener);
+        for(int i=1; i<=paitionNum; i++){
+            int mod = i%ipList.size();
+            String ipAddress = ipList.get(mod-1);
+            //因为是分布式的机器，所以需要zkClient writeData乐观锁，所以这里需要写上for(;;)
+            Hessian2Input hessian2Input = new Hessian2Input();
+            for (;;){
+                try{
+                    byte[] ipAddressInfo = zkClient.readData("/PatitionInfo");
+                    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(ipAddressInfo);
+                    hessian2Input.init(byteArrayInputStream);
+                    HashMap<String,HashMap<String,ArrayList<Integer>>> Map_ip_patitionlist = (HashMap<String,HashMap<String,ArrayList<Integer>>>)hessian2Input.readObject();
+                    if(Map_ip_patitionlist.get(ipAddress)==null) {
+                        HashMap<String,ArrayList<Integer>> map = new HashMap<>();
+                        ArrayList<Integer> arrayList = new ArrayList<Integer>();
+                        arrayList.add(i);
+                        map.put(topic_name,arrayList);
+                        Map_ip_patitionlist.put(ipAddress,map);
+                    }else {
+                        if(Map_ip_patitionlist.get(ipAddress).get(topic_name)==null){
+                            ArrayList<Integer> arrayList = new ArrayList<Integer>();
+                            arrayList.add(i);
+                            Map_ip_patitionlist.get(ipAddress).put(topic_name,arrayList);
+                        }else
+                            Map_ip_patitionlist.get(ipAddress).get(topic_name).add(i);
+                    }
+                    hessian2Output.flush();
+                    hessian2Output.writeObject(Map_ip_patitionlist);
+                    zkClient.writeData("/PatitionInfo",byteArrayOutputStream.toByteArray(),expectedVersion.intValue());
+                    break;
+                }catch (Exception e){
+                    expectedVersion.incrementAndGet();//等同于 ++ 操作
+                }
+            }
+
+        }
     }
 
     /**
-     * 负载均衡LoadBalance，对topic进行分组的本质原因,这里个kafka不一样，采用的是hashcode取模，
+     * 负载均衡LoadBalance，对topic进行分组的本质原因,这里跟kafka不一样，采用的是hashcode取模，
      * （hash一致性算法这里没有用主要是应用场景的不同）
      *
      * 这里是一个有别于kafka patition 的负载均衡和备份机制，也许就是一点点创新的地方吧
