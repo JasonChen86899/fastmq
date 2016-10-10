@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 分区策略
@@ -88,10 +89,28 @@ public class PatitionCollate {
                 Hessian2Input hessian2Input = new Hessian2Input();
                 hessian2Input.init(byteArrayInputStream);
                 HashMap<String,HashMap<String,ArrayList<Integer>>> map = (HashMap<String,HashMap<String,ArrayList<Integer>>>)hessian2Input.readObject();
-                if(map.keySet().size()<ipList.size()){
-
+                final List<String> ip_list = ipList;
+                if(map.keySet().size()>ipList.size()){
+                    List<String> downIp = map.keySet().stream().filter(
+                            ipStrig -> !ip_list.contains(ipStrig)
+                    ).collect(Collectors.toList());
+                    /**
+                     * 取出宕机的ip，将其上的指定topic的分区号集合拿出，进行根据i编号（i，如下面的for循环指的是index）
+                     * hash取模依次分配，再记录，最后写入zk
+                     */
+                    downIp.stream().forEach(ipString -> {
+                        ArrayList<Integer> list_patitions = map.get(ipString).get(topic_name);
+                        for(int i=0; i<list_patitions.size(); i++){
+                            int brokerSize = ip_list.size();
+                            map.get(ip_list.get(i%(brokerSize-1))).get(topic_name).add(list_patitions.get(i));
+                        }
+                    });
+                    hessian2Output.flush();
+                    ByteArrayOutputStream byte_write_back_to_zk = new ByteArrayOutputStream();
+                    hessian2Output.init(byte_write_back_to_zk);
+                    hessian2Output.writeObject(map);
+                    zkClient.writeData("/PatitionInfo",byte_write_back_to_zk.toByteArray());
                 }
-
             }
 
             @Override
@@ -151,18 +170,26 @@ public class PatitionCollate {
      * @return
      * @throws IOException
      */
-    public static String setTopicPatiton(String topic_name,KeyMessage<Object,Object> keyMessage) throws IOException {
-        byte[] ipAddressbytes = zkClient.readData("/MessageData/"+topic_name);
-        byte[] patitionNum = zkClient.readData("/PatitionNum/"+topic_name);
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(ipAddressbytes);
-        Hessian2Input hessian2Input = new Hessian2Input(byteArrayInputStream);
-        int pnum = patitionNum[0];
-        List<String> ipList = (List)hessian2Input.readObject();
-        /**
-         * 这边采用两次取模，分配到具体的ip主机
-         */
-        return ipList.get((keyMessage.getKey().hashCode()%pnum%ipList.size())-1);
+    public static String setTopicPatiton(final String topic_name,KeyMessage<Object,Object> keyMessage) throws IOException {
+        byte[] byte_map = zkClient.readData("/PatitionInfo");
+        byte[] byte_broker_num = zkClient.readData("/PatitionNum/"+topic_name);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byte_map);
+        Hessian2Input hessian2Input = new Hessian2Input();
+        hessian2Input.init(byteArrayInputStream);
+        HashMap<String,HashMap<String,ArrayList<Integer>>> map = (HashMap<String,HashMap<String,ArrayList<Integer>>>)hessian2Input.readObject();
+        ByteArrayInputStream byteArrayInputStream1 = new ByteArrayInputStream(byte_broker_num);
+        hessian2Input.init(byteArrayInputStream1);
+        int patition = (int)hessian2Input.readObject();
+        //找出对应分区所在的broker的ip地址
+        String target_ip = map.entrySet().stream().filter(a ->
+            a.getValue().get(topic_name).stream().filter(b -> b.intValue()==(Hash_Key(keyMessage)%patition)).count()==1
+        ).findFirst().get().getKey();
+        return target_ip;
+    }
 
+    public static int Hash_Key(KeyMessage<Object,Object> keyMessage){
+        //key的处理方法
+        return 1;
     }
 
 }
