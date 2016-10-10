@@ -45,6 +45,20 @@ public class PatitionCollate {
         PatitionCollate.zkClient = zkClient;
     }
 
+    private static KeyRule keyRule;
+
+    public static KeyRule getKeyRule() {
+        return keyRule;
+    }
+
+    /**
+     * 自动加载默认的key规则 Default_keyrule,如果自定义则需要实现keyRule接口，然后调用如下的函数实现重新设定规则。
+     */
+    @Autowired
+    public static void setKeyRule(KeyRule keyRule) {
+        PatitionCollate.keyRule = keyRule;
+    }
+
     /**
      * 注册 topic 事件，进行主题 分区数量的设定
      * @param topic_name
@@ -119,9 +133,9 @@ public class PatitionCollate {
             }
         };
         zkClient.subscribeStateChanges(iZkStateListener);
-        for(int i=1; i<=paitionNum; i++){
+        for(int i=0; i<paitionNum; i++){
             int mod = i%ipList.size();
-            String ipAddress = ipList.get(mod-1);
+            String ipAddress = ipList.get(mod);
             //因为是分布式的机器，所以需要zkClient writeData乐观锁，所以这里需要写上for(;;)
             Hessian2Input hessian2Input = new Hessian2Input();
             for (;;){
@@ -182,14 +196,9 @@ public class PatitionCollate {
         int patition = (int)hessian2Input.readObject();
         //找出对应分区所在的broker的ip地址
         String target_ip = map.entrySet().stream().filter(a ->
-            a.getValue().get(topic_name).stream().filter(b -> b.intValue()==(Hash_Key(keyMessage)%patition)).count()==1
+            a.getValue().get(topic_name).stream().filter(b -> b.intValue()==(keyRule.setKeyRule(keyMessage)%patition)).count()==1
         ).findFirst().get().getKey();
         return target_ip;
-    }
-
-    public static int Hash_Key(KeyMessage<Object,Object> keyMessage){
-        //key的处理方法
-        return 1;
     }
 
 }
