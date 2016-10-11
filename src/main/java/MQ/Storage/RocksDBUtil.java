@@ -1,11 +1,13 @@
 package MQ.Storage;
 
+import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.Options;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +56,7 @@ public class RocksDBUtil {
         options.dispose();
     }
 
-    public static void putObject(Object key,Object value,String topic_name) throws IOException, RocksDBException {
+    public static boolean putObject(Object key,Object value,String topic_name) throws IOException, RocksDBException {
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output(byteArray);
         hessian2Output.writeObject(key);
@@ -69,15 +71,20 @@ public class RocksDBUtil {
             columnFamilyHandles.add(cf);
             columnFamily_Name_Map.put(topic_name, cf);
         }
+        return true;
     }
 
-    public static void getObject(String columFamily_topic_name, Object key) throws IOException, RocksDBException {
+    public static Object getObject(String columFamily_topic_name, Object key) throws IOException, RocksDBException {
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output(byteArray);
         hessian2Output.writeObject(key);
         byte[] keyBytes = byteArray.toByteArray();
         if(columnFamily_Name_Map.containsKey(columFamily_topic_name)){
-            db.get(columnFamily_Name_Map.get(columFamily_topic_name),keyBytes);
-        }
+            byte[] bytes_get = db.get(columnFamily_Name_Map.get(columFamily_topic_name),keyBytes);
+            ByteArrayInputStream byteArray_get = new ByteArrayInputStream(bytes_get);
+            Hessian2Input hessian2Input = new Hessian2Input(byteArray_get);
+            return hessian2Input.readObject();
+        }else
+            return null;
     }
 }
