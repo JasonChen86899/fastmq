@@ -3,6 +3,7 @@ package MQ;
 import MQ.Message.KeyMessage;
 import org.springframework.stereotype.Component;
 
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -15,9 +16,9 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  */
 @Component
 public class MessageQueueMap {
-    private static ConcurrentHashMap<String,ConcurrentLinkedDeque<KeyMessage<Object,Object>>> messageQueueMap = new ConcurrentHashMap<String, ConcurrentLinkedDeque<KeyMessage<Object,Object>>>();
+    private static ConcurrentHashMap<String,Queue<KeyMessage<Object,Object>>> messageQueueMap = new ConcurrentHashMap<String, Queue<KeyMessage<Object,Object>>>();
     //private static HashMap<String ,SynchronousQueue> queueMap = new HashMap<>();
-    public static ConcurrentLinkedDeque getByName(String topic_partition){
+    public static Queue getByName(String topic_partition){
         return messageQueueMap.get(topic_partition);
     }
     public static void putByName(String topic_patition){

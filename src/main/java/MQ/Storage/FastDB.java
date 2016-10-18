@@ -104,9 +104,9 @@ public class FastDB {
         byte[] bytes_get = db.get(cf,keyBytes);
         if(bytes_get != null) {
             ByteArrayInputStream byteArray_get = new ByteArrayInputStream(bytes_get);
-            Hessian2Input hessian2Input = new Hessian2Input(byteArray_get);
-            return hessian2Input.readObject();
-        }else
+        Hessian2Input hessian2Input = new Hessian2Input(byteArray_get);
+        return hessian2Input.readObject();
+    }else
             return null;
     }
 }

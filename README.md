@@ -1,4 +1,4 @@
-# Projects
+# FastMQ
 FastMQ based on zeromq(Jeromq) is aimed to build simple and fast MQServicers that Cloud Platform or Web Service can use.
 
 ## Data Persistence
@@ -12,4 +12,4 @@ to save information of MQ clusters and do some operation with the information.
 ## Service Export and Refer
 use dubbo (alibaba dubbo <https://github.com/alibaba/dubbo>) to do the job of RPC.it can export and refer services.
 ### planning another RPC framework by designing autonomously.
-plan to discovery
+plan to discovery a simple RPC framework fit with MQ communication.

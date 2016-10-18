@@ -12,12 +12,16 @@ import java.util.Map;
  * @param <V>
  */
 public class KeyMessage<K,V> implements Map.Entry<K,V> {
-    private final K key;
+    private K key;
     private V value;
-    public KeyMessage(K k,V v){
+    private final String topic_name;
+
+    public KeyMessage(K k,V v,String tn){
         key = k;
         value = v;
+        topic_name = tn;
     }
+
     @Override
     public K getKey() {
         return key;
@@ -30,6 +34,12 @@ public class KeyMessage<K,V> implements Map.Entry<K,V> {
 
     @Override
     public V setValue(V value) {
-        return null;
+        this.value = value;
+        return value;
     }
+
+    public void setKey(K key) {
+        this.key = key;
+    }
+
 }
