@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.Queue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
 /**
@@ -28,18 +29,19 @@ public class MessageStorageStructure {
     @Autowired
     private SqliteUtil sqliteUtil;
 
-    public boolean sycSaveMessage(String topic_name, KeyMessage<String,Object> keyMessage){
+    public boolean sycSaveMessage(KeyMessage<String,Object> keyMessage){
         String key;
         try{
             key =  keyMessage.getKey();
-            int a= sqliteUtil.selectMessageNumByKeyAndUpdateNum(key,topic_name);
+            int a= sqliteUtil.selectMessageNumByKeyAndUpdateNum(key,keyMessage.getTopic_name());
             if(a<0)
                 return false;
             key += "_"+a;
             final String final_key = key;
-            Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage.getValue(),topic_name);
+            Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage.getValue(),keyMessage.getTopic_name(),true);
             FutureTask<Boolean> futureTask = new FutureTask(save);
             new Thread(futureTask).start();
+            //同步操等待阻塞
             if(futureTask.get().booleanValue() == false)
                 return false;
             keyMessage.setKey(key);
@@ -47,6 +49,30 @@ public class MessageStorageStructure {
         }catch (Exception e){
             return false;
         }
+    }
+
+    public boolean asycSaveMessage(KeyMessage<String,Object> keyMessage){
+        String key;
+        key =  keyMessage.getKey();
+        int a= sqliteUtil.selectMessageNumByKeyAndUpdateNum(key,keyMessage.getTopic_name());
+        if(a<0)
+            return false;
+        key += "_"+a;
+        final String final_key = key;
+        Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage.getValue(),keyMessage.getTopic_name(),false);
+        FutureTask<Boolean> futureTask = new FutureTask(save);
+        new Thread(futureTask).start();
+        //同步操等待阻塞
+        try {
+            if(futureTask.get().booleanValue() == false)
+                return false;
+        } catch (InterruptedException e) {
+            return false;
+        } catch (ExecutionException e) {
+            return false;
+        }
+        keyMessage.setKey(key);
+        return true;
     }
 
     /**
@@ -59,7 +85,7 @@ public class MessageStorageStructure {
         int commited_num = sqliteUtil.selectMessageCommited(key,topic_name);
         for(int i= commited_num+1;i<sequenceId;i++){
             try {
-                messageQueue.add(new KeyMessage<String, Object>(key+"_"+i,fastDB.getObject(topic_name,key+"_"+i)));
+                messageQueue.add(new KeyMessage<String, Object>(key+"_"+i,fastDB.getObject(topic_name,key+"_"+i),topic_name));
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (RocksDBException e) {

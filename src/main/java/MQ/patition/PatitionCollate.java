@@ -184,7 +184,7 @@ public class PatitionCollate {
      * @return
      * @throws IOException
      */
-    public static String setTopicPatiton(final String topic_name,KeyMessage<Object,Object> keyMessage) throws IOException {
+    public static String getIpAddressByTopicPatition(final String topic_name,KeyMessage<String,Object> keyMessage) throws IOException {
         byte[] byte_map = zkClient.readData("/PatitionInfo");
         byte[] byte_broker_num = zkClient.readData("/PatitionNum/"+topic_name);
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byte_map);

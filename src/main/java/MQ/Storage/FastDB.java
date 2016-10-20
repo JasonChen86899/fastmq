@@ -62,7 +62,8 @@ public class FastDB {
         options.dispose();
     }
 
-    public boolean putObject(Object key,Object value,String topic_name) throws IOException, RocksDBException {
+    //flag false 异步，true 同步
+    public boolean putObject(Object key,Object value,String topic_name,boolean flag) throws IOException, RocksDBException {
         ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output(byteArray);
         hessian2Output.writeObject(key);
@@ -73,7 +74,7 @@ public class FastDB {
         //db的open 静态方法有 关于初始化db时列簇和相应的列簇名的设置，不过也可以以后地动态添加
         ColumnFamilyHandle cf=db.createColumnFamily(new ColumnFamilyDescriptor(topic_name.getBytes()));
         try{
-            db.put(cf,keyBytes,valueBytes);
+            db.put(cf,new WriteOptions().setSync(flag),keyBytes,valueBytes);
             return true;
         }catch (Exception e) {
         /*

@@ -2,6 +2,8 @@ package MQ;
 
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
+import MQ.Storage.MessageStorageStructure;
+import MQ.patition.PatitionCollate;
 import com.github.zkclient.ZkClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zeromq.ZMQ;
@@ -16,13 +18,30 @@ import java.util.List;
 public class BrokerPullSingleton extends Thread {
     @Autowired
     private ZkClient zkClient;
-    boolean falg;//线程停止标志
+    boolean flag;//线程停止标志
+    boolean synStorage;//刷盘标志，默认是true
+    @Autowired
+    private MessageStorageStructure messageStorage;
+    @Autowired
+    private MessageQueueMap messageQueueMap;
     private String tcpAddress;
     private String serviceAddress;
     private ZMQ.Context context;
     private ZMQ.Socket puller;
     public BrokerPullSingleton(String adr,String serveradr){
-        falg = true;
+        flag = true;
+        synStorage = true;//默认是true
+        this.tcpAddress = adr;
+        this.serviceAddress = serveradr;
+        context = ZMQ.context(1);
+        puller = context.socket(ZMQ.PULL);
+        puller.bind(tcpAddress);
+    }
+
+    public BrokerPullSingleton(String adr,String serveradr,boolean synStorageFlag){
+        flag = true;
+        synStorage = synStorageFlag;
+        synStorage = true;
         this.tcpAddress = adr;
         this.serviceAddress = serveradr;
         context = ZMQ.context(1);
@@ -30,7 +49,7 @@ public class BrokerPullSingleton extends Thread {
         puller.bind(tcpAddress);
     }
     public void run(){
-        while(falg){
+        while(flag){
             /**
              * 此处需要进行 Protobuf 编解码，这里暂时以两个步骤替代
              */
@@ -58,28 +77,69 @@ public class BrokerPullSingleton extends Thread {
             MessageQueueMap.getByName(a).add(b);
             */
             if(msg!=null) {
-                //开启一个线程，向其他MQ机器传输消息
-                new Thread() {
-                    public void run() {
-                        ZMQ.Socket pushToMQService = context.socket(ZMQ.PUSH);
-                        int flag = 1;
-                        while (flag == 1) {
-                            try {
-                                List<String> ipList = zkClient.getChildren("/MQServers");
-                                for (int i = 0; i < ipList.size(); i++) {
-                                    pushToMQService.connect(ipList.get(0));
-                                    pushToMQService.send(revice_bytes);
+                if (synStorage == true) {
+                    //开始将信息进行存储,同步刷盘
+                    if (messageStorage.sycSaveMessage(msg)) {
+                        //开启一个线程，向其他MQ机器传输消息
+                        new Thread() {
+                            public void run() {
+                                ZMQ.Socket pushToMQService = context.socket(ZMQ.PUSH);
+                                int flag_message = 1;
+                                while (flag_message == 1) {
+                                    try {
+                                        List<String> ipList = zkClient.getChildren("/MQServers");
+                                        for (int i = 0; i < ipList.size(); i++) {
+                                            pushToMQService.connect(ipList.get(0));
+                                            pushToMQService.send(revice_bytes);
+                                        }
+                                        //以上一旦发生错误就会不进行置0，然后继续进行从zk拿信息传输
+                                        flag_message = 0;
+                                    } catch (Exception e) {
+                                    }
                                 }
-                                //以上一旦发生错误就会不进行置0，然后继续进行从zk拿信息传输
-                                flag = 0;
-                            } catch (Exception e) {
                             }
+                        }.start();
+                        try {
+                            if(tcpAddress == PatitionCollate.getIpAddressByTopicPatition(msg.getTopic_name(),msg)){
+                                new PutMessageToQueue(msg,messageQueueMap).start();
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
-                }.start();
+                }
+                if(synStorage == false) {
+                    //异步刷盘,这里的异步刷盘只是DB的异步，真正的异步需要别的方案，要好好想想
+                    if (messageStorage.asycSaveMessage(msg)) {
+                        //开启一个线程，向其他MQ机器传输消息
+                        new Thread() {
+                            public void run() {
+                                ZMQ.Socket pushToMQService = context.socket(ZMQ.PUSH);
+                                int flag_message = 1;
+                                while (flag_message == 1) {
+                                    try {
+                                        List<String> ipList = zkClient.getChildren("/MQServers");
+                                        for (int i = 0; i < ipList.size(); i++) {
+                                            pushToMQService.connect(ipList.get(0));
+                                            pushToMQService.send(revice_bytes);
+                                        }
+                                        //以上一旦发生错误就会不进行置0，然后继续进行从zk拿信息传输
+                                        flag_message = 0;
+                                    } catch (Exception e) {
+                                    }
+                                }
+                            }
+                        }.start();
+                        try {
+                            if (tcpAddress == PatitionCollate.getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
+                                new PutMessageToQueue(msg, messageQueueMap).start();
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
-            //开始讲信息进行存储
-            
         }
     }
 }
