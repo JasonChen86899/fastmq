@@ -1,4 +1,4 @@
-package MQ;
+package MQ.Cluster;
 
 import com.github.zkclient.ZkClient;
 import org.springframework.context.annotation.Bean;

@@ -29,6 +29,7 @@ public class MessageStorageStructure {
     @Autowired
     private SqliteUtil sqliteUtil;
 
+    //数据：key_序列号
     public boolean sycSaveMessage(KeyMessage<String,Object> keyMessage){
         String key;
         try{

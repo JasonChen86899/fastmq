@@ -3,20 +3,21 @@ package MQ;
 
 import org.zeromq.ZMQ;
 
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.Queue;
+
 
 /**
  * Created by Jason Chen on 2016/8/27.
  */
 public class BrokerPush extends Thread {
     private String topicName;
-    private ConcurrentLinkedDeque mq;
+    private Queue mq;
     private boolean flag;
     private String tcp;
     private int type;
     private ZMQ.Context context;
     private ZMQ.Socket transfer;
-    public BrokerPush(String tcpAddress, int t, ConcurrentLinkedDeque messageQueue){//type 指的是ZMQ下面的传输方式
+    public BrokerPush(String tcpAddress, int t, Queue messageQueue){//type 指的是ZMQ下面的传输方式
         this.mq = messageQueue;
         this.flag = true;
         this.tcp = tcpAddress;
@@ -26,7 +27,7 @@ public class BrokerPush extends Thread {
         transfer.bind(tcp);
     }
 
-    public BrokerPush(String tcpAddress, int t, String topicname, ConcurrentLinkedDeque messageQueue){//type 指的是ZMQ下面的传输方式
+    public BrokerPush(String tcpAddress, int t, String topicname, Queue messageQueue){//type 指的是ZMQ下面的传输方式
         this.topicName = topicname;
         this.mq = messageQueue;
         this.flag = true;
@@ -60,7 +61,8 @@ public class BrokerPush extends Thread {
                  * 这里暂时以打印为演示，方便调试
                  */
                 //doSend((String)mq.getFirst());
-                System.out.println((String)mq.getFirst());
+                //System.out.println((String)mq.getFirst());
+
             }
         }
         if(type == ZMQ.PUB){
@@ -69,7 +71,7 @@ public class BrokerPush extends Thread {
                  * 这里暂时以打印为演示，方便调试
                  */
                 //doSubSend((String)mq.getFirst(),topicName);
-                System.out.println((String)mq.getFirst());
+                //System.out.println((String)mq.getFirst());
             }
         }
     }

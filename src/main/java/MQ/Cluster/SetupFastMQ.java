@@ -1,5 +1,7 @@
-package MQ;
+package MQ.Cluster;
 
+import MQ.MQService;
+import MQ.ReceiveFromLeader;
 import com.github.zkclient.IZkDataListener;
 import com.github.zkclient.exception.ZkNoNodeException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +42,14 @@ public class SetupFastMQ extends Thread {
         }*/
         //分布式锁用来创建MQ
         registSetupService();
+        //非Leader机器需要开启一个接受pull线程传送的数据的线程
+        ReceiveFromLeader receiveFromPullSingleton = new ReceiveFromLeader(ipAddress,ZMQ.PULL,true);
+        receiveFromPullSingleton.start();
         while(!tryGetLock()){
             //自旋
-        };
+        }
         FastMQ.start();
+        receiveFromPullSingleton.setFlag(false);
     }
 
     /**

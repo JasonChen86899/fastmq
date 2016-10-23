@@ -13,6 +13,7 @@ public class PutMessageToQueue extends Thread {
         this.messageQueueMap = messageQueueMap;
     }
     public void run(){
-        messageQueueMap.getByName(keyMessage.getTopic_name()).add(keyMessage);
+        //根据 主题_分区号 进行阻塞队列分别
+        messageQueueMap.getByName(keyMessage.getTopic_name()+"_"+keyMessage.getPatition()).add(keyMessage);
     }
 }

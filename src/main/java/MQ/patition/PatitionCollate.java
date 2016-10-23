@@ -195,9 +195,12 @@ public class PatitionCollate {
         hessian2Input.init(byteArrayInputStream1);
         int patition = (int)hessian2Input.readObject();
         //找出对应分区所在的broker的ip地址
+        //先保存分区号
+        keyMessage.setPatition(keyRule.setKeyRule(keyMessage)%patition);
         String target_ip = map.entrySet().stream().filter(a ->
             a.getValue().get(topic_name).stream().filter(b -> b.intValue()==(keyRule.setKeyRule(keyMessage)%patition)).count()==1
         ).findFirst().get().getKey();
+
         return target_ip;
     }
 

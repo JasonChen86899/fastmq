@@ -15,6 +15,7 @@ public class KeyMessage<K,V> implements Map.Entry<K,V> ,Comparable<KeyMessage<K,
     private K key;
     private V value;
     private final String topic_name;
+    private int patition;
 
     public KeyMessage(K k, V v, String tn){
         key = k;
@@ -56,4 +57,13 @@ public class KeyMessage<K,V> implements Map.Entry<K,V> ,Comparable<KeyMessage<K,
             return 0;
         else return -1;
     }
+
+    public int getPatition() {
+        return patition;
+    }
+
+    public void setPatition(int patition) {
+        this.patition = patition;
+    }
+
 }

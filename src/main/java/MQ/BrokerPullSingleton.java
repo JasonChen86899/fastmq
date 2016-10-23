@@ -50,9 +50,6 @@ public class BrokerPullSingleton extends Thread {
     }
     public void run(){
         while(flag){
-            /**
-             * 此处需要进行 Protobuf 编解码，这里暂时以两个步骤替代
-             */
             //1KB的信息量,用来基本的信息传输，这个值是暂时的设定
             byte[] revice_bytes = new byte[1024];
             puller.recv(revice_bytes,0,1024,1);
