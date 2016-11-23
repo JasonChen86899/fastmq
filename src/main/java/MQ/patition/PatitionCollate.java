@@ -32,16 +32,12 @@ public class PatitionCollate {
 
     private static ZkClient zkClient;
 
-    public static ZkClient getZkClient() {
-        return zkClient;
-    }
-
     /**
      * 注入静态变量，需要定义getter，setter然后在 1.xml文件里面进行定义 2. 如下面的做法（stackoverflow上面分享的做法）
      * @param zkClient
      */
     @Autowired
-    public static void setZkClient(ZkClient zkClient) {
+    public void setZkClient(ZkClient zkClient) {
         PatitionCollate.zkClient = zkClient;
     }
 
@@ -83,7 +79,8 @@ public class PatitionCollate {
             zkClient.createPersistent("/PatitionInfo");
         hessian2Output.flush();
         ByteArrayOutputStream byteArray_PatitionIndfo = new ByteArrayOutputStream();
-        hessian2Output.writeObject(new HashMap<String,ArrayList<Integer>>());
+        hessian2Output.init(byteArray_PatitionIndfo);
+        hessian2Output.writeObject(new HashMap<String,HashMap<String,ArrayList<Integer>>>());
         zkClient.writeData("/PatitionInfo",byteArray_PatitionIndfo.toByteArray());
         final IZkStateListener iZkStateListener = new IZkStateListener() {
             @Override
