@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by Administrator on 2016/11/23.
+ * Created by Jason Chen on 2016/11/23.
  */
 public class ConsumerGroup {
 
