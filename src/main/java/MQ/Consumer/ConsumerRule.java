@@ -62,6 +62,9 @@ public class ConsumerRule {
                 }
                 collateMap.put(group.getConsumerIpList().get(index),newList);
             }
+            for(int q=mod-1; q>=0; q--){
+                collateMap.get(group.getConsumerIpList().get(q)).add(topic+"_"+(patitionNum-q));
+            }
         }
     }
 }

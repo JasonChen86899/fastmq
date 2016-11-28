@@ -48,7 +48,7 @@ public class ConsumerRegist extends Thread{
                         zkClient.writeData("/Consumer/Group" + group, SerializationUtil.serialize(consumeripList));
                     } catch (Exception e) {
                         e.printStackTrace();
-                    } 
+                    }
                 }
             }else {
                 break;
