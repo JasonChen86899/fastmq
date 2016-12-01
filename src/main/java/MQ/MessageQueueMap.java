@@ -1,6 +1,9 @@
 package MQ;
 
 import MQ.Message.KeyMessage;
+import com.github.zkclient.ZkClient;
+import org.apache.zookeeper.client.ZooKeeperSaslClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Queue;
@@ -24,6 +27,19 @@ public class MessageQueueMap {
     }
     //优先队列保持队列的绝对有序性
     public static void putByName(String topic_patition){
-        messageQueueMap.put(topic_patition,new PriorityBlockingQueue<>());
+        PriorityBlockingQueue<KeyMessage<Object,Object>> q;
+        messageQueueMap.put(topic_patition,q = new PriorityBlockingQueue<>());
+
+        /**
+         * 每产生一个队列就产生对应的BrokerPush线程进行消息的推送
+         */
+        new BrokerPush(zkClient,topic_patition,q).start();
+    }
+
+    private static ZkClient zkClient;
+
+    @Autowired
+    public void setZkClient(ZkClient zk){
+        MessageQueueMap.zkClient = zk;
     }
 }

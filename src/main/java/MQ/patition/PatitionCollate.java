@@ -62,7 +62,7 @@ public class PatitionCollate {
      * @throws IOException
      */
     public static void registTopicEvent(final String topic_name, final int paitionNum) throws IOException {
-        zkClient.createEphemeral("/"+topic_name);
+        //zkClient.createEphemeral("/"+topic_name);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output();
         hessian2Output.init(byteArrayOutputStream);
@@ -197,7 +197,6 @@ public class PatitionCollate {
         String target_ip = map.entrySet().stream().filter(a ->
             a.getValue().get(topic_name).stream().filter(b -> b.intValue()==(keyRule.setKeyRule(keyMessage)%patition)).count()==1
         ).findFirst().get().getKey();
-
         return target_ip;
     }
 

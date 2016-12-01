@@ -1,5 +1,8 @@
 package MQ.Consumer;
 
+import MQ.Serialization.SerializationUtil;
+import com.github.zkclient.ZkClient;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +12,15 @@ import java.util.List;
  */
 public class ConsumerGroup {
 
+    private String name;
+
     private ArrayList<String> consumerIpList;
 
     private HashMap<String, List> collateMap;
 
-    public ConsumerGroup() {
-        this.consumerIpList = new ArrayList<>();
+    public ConsumerGroup(ZkClient zkClient,String path,String groupName) {
+        this.name = groupName;
+        this.consumerIpList = new ArrayList<>(zkClient.getChildren(path));
         this.collateMap = new HashMap<>();
     }
 
@@ -33,6 +39,10 @@ public class ConsumerGroup {
 
     public void setCollateMap(HashMap<String, List> collateMap) {
         this.collateMap = collateMap;
+    }
+
+    public String getName(){
+        return this.name;
     }
 }
 

@@ -27,29 +27,33 @@ public class ConsumerRegist extends Thread{
 
     public void run(){
         while (!Thread.currentThread().isInterrupted()){
-            String group_consumerIp = transfer.recvStr();
+            String group_consumerIp = transfer.recvStr();//block模式
             String[] recStrArray = group_consumerIp.split("_");
             String group = recStrArray[0];
             String consumerIp = recStrArray[1];
             if (check_ip(consumerIp)){
-                if(!zkClient.exists("/Consumer/Group"+group)) {
-                    zkClient.createEphemeral("/Consumer/Group" + group);
+                if(!zkClient.exists("/Consumer/Group/"+group+"/ids")) {
+                    zkClient.createEphemeral("/Consumer/Group/ids" + group);
                     HashSet<String> consumeripList = new HashSet<>();
                     consumeripList.add(consumerIp);
                     try {
-                        zkClient.writeData("/Consumer/Group" + group, SerializationUtil.serialize(consumeripList));
+                        zkClient.writeData("/Consumer/Group/" + group+"/ids", SerializationUtil.serialize(consumeripList));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }else {
                     try {
-                        HashSet<String> consumeripList = (HashSet<String>)SerializationUtil.deserialize(zkClient.readData("/Consumer/Group"));
+                        HashSet<String> consumeripList = (HashSet<String>)SerializationUtil.deserialize(zkClient.readData("/Consumer/Group/"+group+"/ids"));
+                        if(consumeripList.contains(consumerIp))
+                            continue;
                         consumeripList.add(consumerIp);
-                        zkClient.writeData("/Consumer/Group" + group, SerializationUtil.serialize(consumeripList));
+                        zkClient.writeData("/Consumer/Group/" + group+"/ids", SerializationUtil.serialize(consumeripList));
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }
+                //每次注册之后，需要进行一次重新分配
+
             }else {
                 break;
             }

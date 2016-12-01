@@ -21,14 +21,27 @@ public class ConsumerConnector {
         this.zkClient = new ZkClient(Zkservers,10000,10000);
     }
 
-    public void creatGroupTopicMessageStreams(Map<String,Integer> map){
+    /**
+     * 这是创建group和topic的唯一接口，目前是这样的
+     * @param map
+     */
+    public void creatGroupTop(Map<String,Integer> map){
         map.entrySet().stream().forEach((entry) -> {
             try {
-                //每个topic 在每个消费者组的topic目录下面
-                List<String> children = zkClient.getChildren("/Consumer/Group/"+consumerConfig.getPropertiesMap().get("zk.groupid")+"/topic");
-                if(children.contains(entry.getKey()))
+                //每个topic 在Consumer/Topic目录下面,每个关注了该topic的groupid都会生成相应的子目录
+                if(zkClient.exists("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid")))
                     return;//foreach 中不能用continue ；这里return 和 continue一样
-                zkClient.writeData("/Consumer/Group/"+consumerConfig.getPropertiesMap().get("zk.groupid")+"/topic",SerializationUtil.serialize(entry.getKey()));
+                zkClient.createPersistent("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid"));
+                //List<String> children = zkClient.getChildren("/Consumer/Topic/"+consumerConfig.getPropertiesMap().get("zk.groupid")+"/topic");
+                //if(children.contains(entry.getKey()))
+                    //return;//foreach 中不能用continue ；这里return 和 continue一样
+                //zkClient.writeData("/Consumer/Group/"+consumerConfig.getPropertiesMap().get("zk.groupid")+"/topic",SerializationUtil.serialize(entry.getKey()));
+
+                /**
+                 * 调用注册topic的函数，这是关键的几步
+                 */
+                if(zkClient.exists("/Consumer/Topic/"+entry.getKey()))
+                    return;
                 PatitionCollate.registTopicEvent(entry.getKey(),entry.getValue());
             } catch (IOException e) {
                 e.printStackTrace();

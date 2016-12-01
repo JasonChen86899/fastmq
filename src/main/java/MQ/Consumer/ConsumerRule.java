@@ -34,7 +34,8 @@ public class ConsumerRule {
      * @param topic
      * @param group
      */
-    public static void consumerRule(String topic, ConsumerGroup group){
+    public static void DefalutConsumerRule(String topic, ConsumerGroup group){
+        HashMap<String,List> collateMap;
         int patitionNum = 0;
         try {
             patitionNum = (int)SerializationUtil.deserialize(zkClient.readData("PatitionNum/"+topic));
@@ -44,7 +45,7 @@ public class ConsumerRule {
         int consumerSize = group.getConsumerIpList().size();
         if(patitionNum<=consumerSize){
             group.setCollateMap(new HashMap<>());
-            HashMap<String,List> collateMap = group.getCollateMap();
+            collateMap = group.getCollateMap();
             for(int p=0; p<patitionNum; p++){
                 List newList = new ArrayList<String>();
                 newList.add(topic+"_"+(p+1));
@@ -54,7 +55,7 @@ public class ConsumerRule {
             int mul = patitionNum/consumerSize;
             int mod = patitionNum%consumerSize;
             group.setCollateMap(new HashMap<>());
-            HashMap<String,List> collateMap = group.getCollateMap();
+            collateMap = group.getCollateMap();
             for(int p=0,index =0; p<patitionNum; p=p+mul,index++){
                 List newList = new ArrayList<String>();
                 for(int q=0; q<mul; q++){
@@ -65,6 +66,11 @@ public class ConsumerRule {
             for(int q=mod-1; q>=0; q--){
                 collateMap.get(group.getConsumerIpList().get(q)).add(topic+"_"+(patitionNum-q));
             }
+        }
+        try {
+            zkClient.writeData("/Consumer/Group/+"+group.getName()+"/collateMap",SerializationUtil.serialize(collateMap));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
