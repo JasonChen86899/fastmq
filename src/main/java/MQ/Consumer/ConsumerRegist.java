@@ -1,6 +1,7 @@
 package MQ.Consumer;
 
 import MQ.Serialization.SerializationUtil;
+import com.github.zkclient.IZkChildListener;
 import com.github.zkclient.ZkClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.zeromq.ZMQ;
 import java.io.IOException;
 
 import java.util.HashSet;
+import java.util.List;
 
 /**
  * Created by Jason Chen on 2016/11/23.
@@ -33,7 +35,7 @@ public class ConsumerRegist extends Thread{
             String consumerIp = recStrArray[1];
             if (check_ip(consumerIp)){
                 if(!zkClient.exists("/Consumer/Group/"+group+"/ids")) {
-                    zkClient.createEphemeral("/Consumer/Group/ids" + group);
+                    zkClient.createEphemeral("/Consumer/Group/"+group+"/ids");
                     HashSet<String> consumeripList = new HashSet<>();
                     consumeripList.add(consumerIp);
                     try {

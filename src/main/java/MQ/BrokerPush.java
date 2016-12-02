@@ -1,6 +1,8 @@
 package MQ;
 
 
+import MQ.Consumer.ConsumerGroup;
+import MQ.Consumer.ConsumerRule;
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
 import com.github.zkclient.ZkClient;
@@ -60,7 +62,7 @@ public class BrokerPush extends Thread {
         context = ZMQ.context(1);
         this.consumerIpAddress = new ArrayList<>();
         sameTopicGroupPub(zkClient,topic_patition,topicName);
-        //
+        //进行pushSockets的create然后进行发送
         consumerIpAddress.forEach((eachIp) -> {
             ZMQ.Socket transfer =context.socket(type);
             pushSockets.add(transfer);
@@ -118,6 +120,15 @@ public class BrokerPush extends Thread {
 
     private void sameTopicGroupPub(ZkClient zkClient,String topic_patition,String topic){
         List<String> groupChildren = zkClient.getChildren("/Consumer/Topic/"+topic);
+        /**
+         * 注册监听事件，一旦消费者Group发生变化，需要立即停止线程然后重新获取collateMap
+         */
+        //List<String> groupChildren = zkClient.getChildren("/Consumer/Topic"+topicName);
+        groupChildren.forEach(group ->
+                zkClient.subscribeChildChanges("/Consumer/Group/"+group+"/ids", (s,list) -> {
+                    flag = false;//停止发送数据报文
+                    ConsumerRule.DefalutConsumerRule(topicName,new ConsumerGroup(zkClient,"/Consumer/Group/"+group+"/ids",group));
+                }));
         groupChildren.forEach((group) -> {
             try {
                 HashMap<String,List<String>> consumerip_List_topicPatition = (HashMap<String,List<String>>)SerializationUtil.deserialize(zkClient.readData("Consumer/Group/"+group+"/collateMap"));
@@ -131,6 +142,7 @@ public class BrokerPush extends Thread {
     }
 
     private void sendToGroup(byte[] sendData){
+
         pushSockets.forEach((socket) -> socket.send(sendData));
     }
 }
