@@ -6,15 +6,11 @@ import MQ.Consumer.ConsumerRule;
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
 import com.github.zkclient.ZkClient;
-import org.apache.log4j.lf5.viewer.LogFactor5ErrorDialog;
 import org.zeromq.ZMQ;
-
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.LockSupport;
 
 
