@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.LockSupport;
 
 
 /**
@@ -22,14 +24,15 @@ import java.util.Queue;
 public class BrokerPush extends Thread {
     private String topicName;
     private String patition;
-    private ArrayList<String> consumerIpAddress;
     private Queue mq;
     private boolean flag;
+    private boolean changeFlag;
     private String tcp;
     private int type;
     private ZMQ.Context context;
-    private ZMQ.Socket transfer;
-    private ArrayList<ZMQ.Socket> pushSockets;
+    private HashMap<String,ZMQ.Socket> newGroupPushSockets;
+    private HashMap<String,ZMQ.Socket> groupPushSockets;//对应 组名-对应消费者socket的map
+    private HashMap<String,String> groupConsumerIpAddress;//对应 组名-这个组内的消费者Ip地址的map
     /**
     public BrokerPush(String tcpAddress, int t, Queue messageQueue){//type 指的是ZMQ下面的传输方式
         this.mq = messageQueue;
@@ -53,22 +56,22 @@ public class BrokerPush extends Thread {
     }
      **/
 
-    public BrokerPush(ZkClient zkClient,String topic_patition, Queue messageQueue){
+    public BrokerPush(ZkClient zkClient,String topic_patition, Queue messageQueue) throws Exception {
         String[] a = topic_patition.split("_");
-        this.topicName = a[0];
-        this.patition = a[1];
-        this.flag = true;
-        this.type = ZMQ.PUSH;
-        context = ZMQ.context(1);
-        this.consumerIpAddress = new ArrayList<>();
-        sameTopicGroupPub(zkClient,topic_patition,topicName);
-        //进行pushSockets的create然后进行发送
-        consumerIpAddress.forEach((eachIp) -> {
-            ZMQ.Socket transfer =context.socket(type);
-            pushSockets.add(transfer);
-            transfer.connect(eachIp);
-        });
-        this.mq = messageQueue;
+        if(a.length!=2) {
+            this.topicName = a[0];
+            this.patition = a[1];
+            this.flag = true;
+            this.type = ZMQ.PUSH;
+            context = ZMQ.context(1);
+            groupPushSockets = new HashMap<>();
+            newGroupPushSockets = new HashMap<>();
+            groupConsumerIpAddress = new HashMap<>();
+            sameTopicGroupPub(zkClient, topic_patition, topicName);
+            this.mq = messageQueue;
+            this.changeFlag = false;
+        }else
+            throw new Exception("初始化错误");
 }
     /**
     private boolean doSend(String sendData){
@@ -101,6 +104,11 @@ public class BrokerPush extends Thread {
                  * main 代码块
                  */
                 try {
+                    if(changeFlag){
+                     newGroupPushSockets.entrySet().forEach(entry ->
+                         groupPushSockets.put(entry.getKey(),entry.getValue())
+                     );
+                    }
                     sendToGroup(SerializationUtil.serialize((KeyMessage<Object,Object>)mq.poll()));
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -126,23 +134,51 @@ public class BrokerPush extends Thread {
         //List<String> groupChildren = zkClient.getChildren("/Consumer/Topic"+topicName);
         groupChildren.forEach(group ->
                 zkClient.subscribeChildChanges("/Consumer/Group/"+group+"/ids", (s,list) -> {
-                    flag = false;//停止发送数据报文
                     ConsumerRule.DefalutConsumerRule(topicName,new ConsumerGroup(zkClient,"/Consumer/Group/"+group+"/ids",group));
-                }));
-        groupChildren.forEach((group) -> {
+                    try {
+                        HashMap<String,List<String>> consumerip_List_topicPatition = (HashMap<String,List<String>>)SerializationUtil.deserialize(zkClient.readData("Consumer/Group/"+group+"/collateMap"));
+                        groupConsumerIpAddress.put(group,consumerip_List_topicPatition.entrySet().stream().findFirst().filter((entry) ->
+                                entry.getValue().contains(topic_patition)==true
+                        ).get().getKey());
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    //进行相应的group的消费者的ip的改变
+                    ZMQ.Socket changeSocket =context.socket(type);
+                    changeSocket.connect(groupConsumerIpAddress.get(group));
+                    newGroupPushSockets.put(group,changeSocket);
+                    changeFlag = true;
+                })
+        );
+        /**
+         * 实际的操作初始化函数
+         */
+        groupChildren.forEach( group -> {
             try {
                 HashMap<String,List<String>> consumerip_List_topicPatition = (HashMap<String,List<String>>)SerializationUtil.deserialize(zkClient.readData("Consumer/Group/"+group+"/collateMap"));
-                consumerIpAddress.add(consumerip_List_topicPatition.entrySet().stream().findFirst().filter((entry) ->
-                   entry.getValue().contains(topic_patition)==true
+                groupConsumerIpAddress.put(group,consumerip_List_topicPatition.entrySet().stream().findFirst().filter((entry) ->
+                        entry.getValue().contains(topic_patition)==true
                 ).get().getKey());
             } catch (IOException e) {
-                e.printStackTrace();
+                        e.printStackTrace();
             }
+        });
+        //进行pushSockets的create然后进行发送
+        groupConsumerIpAddress.entrySet().forEach((eachEntry) -> {
+            ZMQ.Socket transfer = context.socket(type);
+            transfer.connect(eachEntry.getValue());
+            groupPushSockets.put(eachEntry.getKey(),transfer);
         });
     }
 
     private void sendToGroup(byte[] sendData){
-
-        pushSockets.forEach((socket) -> socket.send(sendData));
+        //pushSockets.stream().filter((each) -> flag == true).forEach((socket) -> socket.send(sendData));
+        groupPushSockets.entrySet().forEach((entry) -> {
+            if(!entry.getValue().send(sendData)){
+                while (!newGroupPushSockets.get(entry.getKey()).send(sendData)){
+                    LockSupport.parkNanos(1000000000);
+                }
+            }
+        });
     }
 }
