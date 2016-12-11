@@ -33,7 +33,11 @@ public class MessageQueueMap {
         /**
          * 每产生一个队列就产生对应的BrokerPush线程进行消息的推送
          */
-        new BrokerPush(zkClient,topic_patition,q).start();
+        try {
+            new BrokerPush(zkClient,topic_patition,q).start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static ZkClient zkClient;

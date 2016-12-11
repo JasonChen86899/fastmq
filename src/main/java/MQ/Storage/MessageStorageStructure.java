@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -27,14 +28,14 @@ public class MessageStorageStructure {
     private FastDB fastDB;
 
     @Autowired
-    private SqliteUtil sqliteUtil;
+    private SqlDBUtil sqlDBUtil;
 
     //数据：key_序列号
     public boolean sycSaveMessage(KeyMessage<String,Object> keyMessage){
         String key;
         try{
             key =  keyMessage.getKey();
-            int a= sqliteUtil.selectMessageNumByKeyAndUpdateNum(key,keyMessage.getTopic_name());
+            int a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(keyMessage.getTopic_name()+"_"+keyMessage.getPatition());
             if(a<0)
                 return false;
             key += "_"+a;
@@ -55,7 +56,7 @@ public class MessageStorageStructure {
     public boolean asycSaveMessage(KeyMessage<String,Object> keyMessage){
         String key;
         key =  keyMessage.getKey();
-        int a= sqliteUtil.selectMessageNumByKeyAndUpdateNum(key,keyMessage.getTopic_name());
+        int a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(keyMessage.getTopic_name()+"_"+keyMessage.getPatition());
         if(a<0)
             return false;
         key += "_"+a;
@@ -78,20 +79,23 @@ public class MessageStorageStructure {
 
     /**
      * 当MQ有一台宕机之后，我们需要读取还没提交的记录继续放入队列
-     * @param topic_name
-     * @param key
+     * @param
      * @return
      */
-    public void getMessageAndPutIntoQueue(String topic_name, String key, int sequenceId, Queue<KeyMessage<String,Object>> messageQueue){
-        int commited_num = sqliteUtil.selectMessageCommited(key,topic_name);
-        for(int i= commited_num+1;i<sequenceId;i++){
+    public void getMessageAndPutIntoQueue(String topic_patition, Queue<KeyMessage<String,Object>> messageQueue){
+        String commited_num = sqlDBUtil.selectMessageCommited(topic_patition);
+        String totalNum = sqlDBUtil.selectMessageTotalNum(topic_patition);
+        BigInteger cn = new BigInteger(commited_num);
+        BigInteger tn = new BigInteger(totalNum);
+        while (cn.compareTo(tn)!=1){
             try {
-                messageQueue.add(new KeyMessage<String, Object>(key+"_"+i,fastDB.getObject(topic_name,key+"_"+i),topic_name));
+                messageQueue.add((KeyMessage<String,Object>)fastDB.getObject(topic_patition.split("_")[0],topic_patition+(cn.toString())));
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (RocksDBException e) {
                 e.printStackTrace();
             }
+            cn = cn.add(new BigInteger("1"));
         }
     }
 

@@ -2,6 +2,7 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
     <context:component-scan base-package="MQ"/>
 
@@ -29,5 +30,50 @@
             <value>tcp://localhost:8000</value>
         </constructor-arg>
     </bean>
+
+    <!-- 引入jdbc配置文件 -->
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:properties/*.properties</value>
+                <!--要是有多个配置文件，只需在这里继续添加即可 -->
+            </list>
+        </property>
+    </bean>
+
+
+
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+        <property name="poolName" value="springHikariCP" />
+        <property name="connectionTestQuery" value="SELECT 1" />
+        <property name="dataSourceClassName" value="${dataSourceClassName}" />
+        <property name="maximumPoolSize" value="${hikari.maximumPoolSize}" />
+        <property name="idleTimeout" value="${hikari.idleTimeout}" />
+
+        <property name="dataSourceProperties">
+            <props>
+                <prop key="url">${dataSource.url}</prop>
+                <prop key="user">${dataSource.username}</prop>
+                <prop key="password">${dataSource.password}</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!-- HikariCP configuration -->
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg ref="hikariConfig"/>
+    </bean>
+
+    <!--JdbcTemplate 内部使用DataSourceUtils进行连接的事务上下文获取-->
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--利用spring的事务管理，添加事务管理-->
+    <bean id="TransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <tx:annotation-driven proxy-target-class="true" transaction-manager="TransactionManager" />
 
 </beans>
