@@ -32,21 +32,21 @@ public class MessageStorageStructure {
 
     //数据：key_序列号
     public boolean sycSaveMessage(KeyMessage<String,Object> keyMessage){
-        String key;
+        String storekey;
+        //key =  keyMessage.getKey();
+        storekey = keyMessage.getTopic_name()+"_"+keyMessage.getPatition();
         try{
-            key =  keyMessage.getKey();
-            int a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(keyMessage.getTopic_name()+"_"+keyMessage.getPatition());
-            if(a<0)
-                return false;
-            key += "_"+a;
-            final String final_key = key;
-            Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage.getValue(),keyMessage.getTopic_name(),true);
-            FutureTask<Boolean> futureTask = new FutureTask(save);
+            String a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(storekey,"message_num");
+            storekey += "_"+a;
+            final String final_key = storekey;
+            Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage,keyMessage.getTopic_name(),true);
+            FutureTask<Boolean> futureTask = new FutureTask<>(save);
             new Thread(futureTask).start();
             //同步操等待阻塞
             if(futureTask.get().booleanValue() == false)
                 return false;
-            keyMessage.setKey(key);
+            //keyMessage.setKey(key);
+            rePackageKeyMessage(final_key,keyMessage);
             return true;
         }catch (Exception e){
             return false;
@@ -54,15 +54,19 @@ public class MessageStorageStructure {
     }
 
     public boolean asycSaveMessage(KeyMessage<String,Object> keyMessage){
-        String key;
-        key =  keyMessage.getKey();
-        int a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(keyMessage.getTopic_name()+"_"+keyMessage.getPatition());
-        if(a<0)
+        String storekey,a;
+        //key =  keyMessage.getKey();
+        storekey = keyMessage.getTopic_name()+"_"+keyMessage.getPatition();
+        try{
+            a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(storekey,"message_num");
+        }catch (Exception e){
+            e.printStackTrace();
             return false;
-        key += "_"+a;
-        final String final_key = key;
-        Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage.getValue(),keyMessage.getTopic_name(),false);
-        FutureTask<Boolean> futureTask = new FutureTask(save);
+        }
+        storekey += "_"+a;
+        final String final_key = storekey;
+        Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage,keyMessage.getTopic_name(),false);
+        FutureTask<Boolean> futureTask = new FutureTask<>(save);
         new Thread(futureTask).start();
         //同步操等待阻塞
         try {
@@ -73,7 +77,8 @@ public class MessageStorageStructure {
         } catch (ExecutionException e) {
             return false;
         }
-        keyMessage.setKey(key);
+        //keyMessage.setKey(key);
+        rePackageKeyMessage(final_key,keyMessage);
         return true;
     }
 
@@ -99,4 +104,7 @@ public class MessageStorageStructure {
         }
     }
 
+    private KeyMessage<String,Object> rePackageKeyMessage(String newKey,KeyMessage<String,Object> oldKeyMessage){
+        return new KeyMessage<>(newKey,oldKeyMessage,oldKeyMessage.getTopic_name());
+    }
 }
