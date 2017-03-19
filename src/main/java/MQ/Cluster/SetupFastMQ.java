@@ -20,6 +20,8 @@ import java.util.concurrent.CountDownLatch;
 public class SetupFastMQ extends Thread {
     @Autowired
     private MQService FastMQ;
+    @Autowired
+    private ReceiveFromLeader receiveFromPullSingleton;
     private ZMQ.Context context;
     private ZMQ.Socket setupFastMQLocalSocket;
     private String ipAddress;
@@ -43,7 +45,7 @@ public class SetupFastMQ extends Thread {
         //分布式锁用来创建MQ
         registSetupService();
         //非Leader机器需要开启一个接受pull线程传送的数据的线程
-        ReceiveFromLeader receiveFromPullSingleton = new ReceiveFromLeader(ipAddress,ZMQ.PULL,true);
+        //ReceiveFromLeader receiveFromPullSingleton = new ReceiveFromLeader(ipAddress,ZMQ.PULL,true);
         receiveFromPullSingleton.start();
         while(!tryGetLock()){
             //自旋

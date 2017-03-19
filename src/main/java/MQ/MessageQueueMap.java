@@ -33,22 +33,22 @@ public class MessageQueueMap {
     }
 
     private static ConcurrentHashMap<String,Queue<KeyMessage<String,Object>>> messageQueueMap = new ConcurrentHashMap<String, Queue<KeyMessage<String,Object>>>();
-    public static Queue getByName(String topic_partition){
+    public static Queue getQueueByName(String topic_partition){
         if(messageQueueMap.get(topic_partition)==null)
-            putByName(topic_partition);
+            creatQueueByname(topic_partition);
         return messageQueueMap.get(topic_partition);
     }
     //优先队列保持队列的绝对有序性
-    public static void putByName(String topic_patition){
+    public static void creatQueueByname(String topic_patition){
         PriorityBlockingQueue<KeyMessage<String,Object>> q;
         messageQueueMap.put(topic_patition,q = new PriorityBlockingQueue<>());
         /**
-         * 再创建队列的时候进行检查，是否是进过宕机或者扩容，有的话需要进行下面的操作
+         * 在创建队列的时候进行检查，是否是进过宕机或者扩容，有的话需要进行下面的操作
          */
         try{
             messageStorageStructure.getMessageAndPutIntoQueue(topic_patition,q);
         }catch (Exception e){
-            if(!(e instanceof NullPointerException))
+            if(!(e instanceof NullPointerException))//如果是初始分配非宕机或扩容的恢复则绕过
                 e.printStackTrace();
         }
 
@@ -61,6 +61,7 @@ public class MessageQueueMap {
             e.printStackTrace();
         }
     }
+
 
     private static ZkClient zkClient;
 

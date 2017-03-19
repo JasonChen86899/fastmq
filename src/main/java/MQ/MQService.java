@@ -31,18 +31,27 @@ public class MQService extends Thread {
     public void run(){
         System.out.println("创建了pull单例线程");
         brokerPullSingleton.start();
+        /**
         String key =null;
         String pushAddress = handleTcpAddress();
         while (true) {
             if ((key = transfer.recvStr()).contains("Queue")) {
                 System.out.println("创建了队列push线程");
-                new BrokerPush(pushAddress, ZMQ.PUSH, MessageQueueMap.getByName(key)).start();
+                try {
+                    new BrokerPush(pushAddress, ZMQ.PUSH, MessageQueueMap.getByName(key)).start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             if ((key = transfer.recvStr()).contains("Topic")) {
                 System.out.println("创建了主题push线程");
-                new BrokerPush(pushAddress, ZMQ.PUB, key, MessageQueueMap.getByName(key)).start();
+                try {
+                    new BrokerPush(pushAddress, ZMQ.PUB, key, MessageQueueMap.getByName(key)).start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
+        }**/
     }
 
     private String handleTcpAddress(){

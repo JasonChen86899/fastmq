@@ -61,7 +61,7 @@ public class PatitionCollate {
      * @param paitionNum 由于 int（四个字节） 转 byte （1个字节），会丢失钱3个字节，所以取值范围为 1-255
      * @throws IOException
      */
-    public static void registTopicEvent(final String topic_name, final int paitionNum) throws IOException {
+    public static void registTopicEvent(ZkClient zkClient, final String topic_name, final int paitionNum) throws IOException {
         //zkClient.createEphemeral("/"+topic_name);
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output();

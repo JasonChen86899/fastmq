@@ -25,7 +25,7 @@ public class ConsumerConnector {
      * 这是创建group和topic的唯一接口，目前是这样的
      * @param map
      */
-    public void creatGroupTop(Map<String,Integer> map){
+    public void creatGroupTopic(Map<String,Integer> map){
         map.entrySet().stream().forEach((entry) -> {
             try {
                 //每个topic 在Consumer/Topic目录下面,每个关注了该topic的groupid都会生成相应的子目录
@@ -42,7 +42,7 @@ public class ConsumerConnector {
                  */
                 if(zkClient.exists("/Consumer/Topic/"+entry.getKey()))
                     return;
-                PatitionCollate.registTopicEvent(entry.getKey(),entry.getValue());
+                PatitionCollate.registTopicEvent(zkClient,entry.getKey(),entry.getValue());
             } catch (IOException e) {
                 e.printStackTrace();
             }

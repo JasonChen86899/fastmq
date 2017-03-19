@@ -5,6 +5,7 @@ import MQ.Serialization.SerializationUtil;
 import MQ.Storage.MessageStorageStructure;
 import MQ.patition.PatitionCollate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.io.IOException;
 /**
  * Created by Jason Chen on 2016/10/21.
  */
+@Service
 public class ReceiveFromLeader extends Thread {
     @Autowired
     private MessageStorageStructure messageStorage;
