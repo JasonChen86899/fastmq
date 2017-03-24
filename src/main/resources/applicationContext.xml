@@ -83,4 +83,11 @@
     <bean id="redisTemplate"
           class="org.springframework.data.redis.core.RedisTemplate"
           p:connectionFactory-ref="lettuceConnectionFactory"/>
+    <bean id="defaultHashOperations"
+          class="org.springframework.data.redis.core.DefaultHashOperations">
+        <constructor-arg>
+            <ref bean="redisTemplate"/>
+        </constructor-arg>
+    </bean>
+
 </beans>

@@ -3,6 +3,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 /**
  * Created by Jason Chen on 2017/3/24.
  */
@@ -12,7 +14,7 @@ import org.springframework.stereotype.Service;
  */
 @Service(value = "redis")
 public class RedisUtil implements RecordsUtil{
-    @Autowired
+    @Resource(name = "defaultHashOperations")
     private HashOperations<String,String,Long> hashOps;
 
     public String selectMessageNumByKeyAndUpdateNum(String topic_partition,String H) throws Exception{
