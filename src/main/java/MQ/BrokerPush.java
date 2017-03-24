@@ -5,7 +5,7 @@ import MQ.Consumer.ConsumerGroup;
 import MQ.Consumer.ConsumerRule;
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
-import MQ.Storage.SqlDBUtil;
+import MQ.Storage.MessageNumberRecords.SqlDBUtil;
 import com.github.zkclient.ZkClient;
 import org.zeromq.ZMQ;
 import java.io.IOException;

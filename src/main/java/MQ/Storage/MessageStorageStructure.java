@@ -5,10 +5,13 @@ package MQ.Storage;
  */
 
 import MQ.Message.KeyMessage;
+import MQ.Storage.MessageNumberRecords.RecordsUtil;
+import MQ.Storage.MessageNumberRecords.SqlDBUtil;
 import org.rocksdb.RocksDBException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Queue;
@@ -27,8 +30,8 @@ public class MessageStorageStructure {
     @Autowired
     private FastDB fastDB;
 
-    @Autowired
-    private SqlDBUtil sqlDBUtil;
+    @Resource(name = "redis")
+    private RecordsUtil recordsUtil;
 
     //数据：key_序列号
     public boolean sycSaveMessage(KeyMessage<String,Object> keyMessage){
@@ -36,7 +39,7 @@ public class MessageStorageStructure {
         //key =  keyMessage.getKey();
         storekey = keyMessage.getTopic_name()+"_"+keyMessage.getPatition();
         try{
-            String a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(storekey,"message_num");
+            String a= recordsUtil.selectMessageNumByKeyAndUpdateNum(storekey,"message_num");
             storekey += "_"+a;
             final String final_key = storekey;
             Callable<Boolean> save =() -> fastDB.putObject(final_key,keyMessage,keyMessage.getTopic_name(),true);
@@ -58,7 +61,7 @@ public class MessageStorageStructure {
         //key =  keyMessage.getKey();
         storekey = keyMessage.getTopic_name()+"_"+keyMessage.getPatition();
         try{
-            a= sqlDBUtil.selectMessageNumByKeyAndUpdateNum(storekey,"message_num");
+            a= recordsUtil.selectMessageNumByKeyAndUpdateNum(storekey,"message_num");
         }catch (Exception e){
             e.printStackTrace();
             return false;
@@ -88,8 +91,8 @@ public class MessageStorageStructure {
      * @return
      */
     public void getMessageAndPutIntoQueue(String topic_patition, Queue<KeyMessage<String,Object>> messageQueue){
-        String commited_num = sqlDBUtil.selectMessageCommited(topic_patition);
-        String totalNum = sqlDBUtil.selectMessageTotalNum(topic_patition);
+        String commited_num = recordsUtil.selectMessageCommited(topic_patition);
+        String totalNum = recordsUtil.selectMessageTotalNum(topic_patition);
         BigInteger cn = new BigInteger(commited_num);
         BigInteger tn = new BigInteger(totalNum);
         while (cn.compareTo(tn)!=1){

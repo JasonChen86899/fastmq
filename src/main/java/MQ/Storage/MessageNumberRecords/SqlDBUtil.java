@@ -1,4 +1,4 @@
-package MQ.Storage;
+package MQ.Storage.MessageNumberRecords;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -7,17 +7,16 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
-import java.sql.*;
 
 /**
  * Created by Jason Chen on 2016/10/15.
  */
 
 /**
- * 每台机器需要这一个小型数据库进行key message_num commited 等信息的记录,key表示的是消息的ID，不含序列号
+ * 需要一个小型数据库进行key message_num commited 等信息的记录,key表示的是消息的ID，不含序列号
  */
-@Service
-public class SqlDBUtil {
+@Service(value = "sqlDB")
+public class SqlDBUtil implements RecordsUtil{
     /**
      * 数据库连接采用spring jdbc 不需要采用orm框架
      */
