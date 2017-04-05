@@ -28,21 +28,22 @@ public class ConsumerConnector {
     public void creatGroupTopic(Map<String,Integer> map){
         map.entrySet().stream().forEach((entry) -> {
             try {
-                //每个topic 在Consumer/Topic目录下面,每个关注了该topic的groupid都会生成相应的子目录
-                if(zkClient.exists("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid")))
-                    return;//foreach 中不能用continue ；这里return 和 continue一样
-                zkClient.createPersistent("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid"));
+                /**
+                 * 调用注册topic的函数，这是关键的几步
+                 */
+                if(zkClient.exists("/Consumer/Topic/"+entry.getKey())){
+                    //每个topic 在Consumer/Topic目录下面,每个关注了该topic的groupid都会生成相应的子目录
+                    if(zkClient.exists("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid")))
+                        return;//foreach 中不能用continue ；这里return 和 continue一样
+                    zkClient.createPersistent("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid"));
+                }else {
+                    zkClient.createPersistent("/Consumer/Topic/"+entry.getKey()+"/"+consumerConfig.getPropertiesMap().get("zk.groupid"));
+                    PatitionCollate.registTopicEvent(zkClient, entry.getKey(), entry.getValue());
+                }
                 //List<String> children = zkClient.getChildren("/Consumer/Topic/"+consumerConfig.getPropertiesMap().get("zk.groupid")+"/topic");
                 //if(children.contains(entry.getKey()))
                     //return;//foreach 中不能用continue ；这里return 和 continue一样
                 //zkClient.writeData("/Consumer/Group/"+consumerConfig.getPropertiesMap().get("zk.groupid")+"/topic",SerializationUtil.serialize(entry.getKey()));
-
-                /**
-                 * 调用注册topic的函数，这是关键的几步
-                 */
-                if(zkClient.exists("/Consumer/Topic/"+entry.getKey()))
-                    return;
-                PatitionCollate.registTopicEvent(zkClient,entry.getKey(),entry.getValue());
             } catch (IOException e) {
                 e.printStackTrace();
             }

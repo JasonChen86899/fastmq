@@ -7,6 +7,7 @@ package MQ.patition;
 import MQ.Message.KeyMessage;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
+import com.github.zkclient.IZkChildListener;
 import com.github.zkclient.IZkStateListener;
 import com.github.zkclient.ZkClient;
 import org.apache.zookeeper.Watcher;
@@ -75,16 +76,18 @@ public class PatitionCollate {
         zkClient.writeData("/MessageData/"+topic_name,bytes);
         zkClient.createEphemeral("/PatitionNum/"+topic_name);
         zkClient.writeData("/PatitionNum/"+topic_name,new byte[]{(byte)paitionNum});
-        if(zkClient.exists("/PatitionInfo"))
+        if(!zkClient.exists("/PatitionInfo")) {
             zkClient.createPersistent("/PatitionInfo");
-        hessian2Output.flush();
-        ByteArrayOutputStream byteArray_PatitionIndfo = new ByteArrayOutputStream();
-        hessian2Output.init(byteArray_PatitionIndfo);
-        hessian2Output.writeObject(new HashMap<String,HashMap<String,ArrayList<Integer>>>());
-        zkClient.writeData("/PatitionInfo",byteArray_PatitionIndfo.toByteArray());
-        final IZkStateListener iZkStateListener = new IZkStateListener() {
+            hessian2Output.reset();
+            ByteArrayOutputStream byteArray_PatitionIndfo = new ByteArrayOutputStream();
+            hessian2Output.init(byteArray_PatitionIndfo);
+            hessian2Output.writeObject(new HashMap<String, HashMap<String, ArrayList<Integer>>>());
+            zkClient.writeData("/PatitionInfo", byteArray_PatitionIndfo.toByteArray());
+        }
+        //进行监视回调函数编写
+        final IZkChildListener iZkChildListener = new IZkChildListener() {
             @Override
-            public void handleStateChanged(Watcher.Event.KeeperState state) throws Exception {
+            public void handleChildChange(String parentPath, List<String> currentChildren) throws Exception {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 Hessian2Output hessian2Output = new Hessian2Output();
                 hessian2Output.init(byteArrayOutputStream);
@@ -116,20 +119,17 @@ public class PatitionCollate {
                             map.get(ip_list.get(i%(brokerSize-1))).get(topic_name).add(list_patitions.get(i));
                         }
                     });
-                    hessian2Output.flush();
+                    hessian2Output.reset();
                     ByteArrayOutputStream byte_write_back_to_zk = new ByteArrayOutputStream();
                     hessian2Output.init(byte_write_back_to_zk);
                     hessian2Output.writeObject(map);
                     zkClient.writeData("/PatitionInfo",byte_write_back_to_zk.toByteArray());
                 }
             }
-
-            @Override
-            public void handleNewSession() throws Exception {
-
-            }
         };
-        zkClient.subscribeStateChanges(iZkStateListener);
+        //进行注册
+        zkClient.subscribeChildChanges("/MQServers",iZkChildListener);
+        //返回正式操作
         for(int i=0; i<paitionNum; i++){
             int mod = i%ipList.size();
             String ipAddress = ipList.get(mod);
@@ -155,7 +155,8 @@ public class PatitionCollate {
                         }else
                             Map_ip_patitionlist.get(ipAddress).get(topic_name).add(i);
                     }
-                    hessian2Output.flush();
+                    byteArrayOutputStream.reset();
+                    hessian2Output.init(byteArrayOutputStream);
                     hessian2Output.writeObject(Map_ip_patitionlist);
                     zkClient.writeData("/PatitionInfo",byteArrayOutputStream.toByteArray(),expectedVersion.intValue());
                     break;
