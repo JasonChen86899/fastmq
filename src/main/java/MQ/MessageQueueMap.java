@@ -1,12 +1,14 @@
 package MQ;
 
 import MQ.Message.KeyMessage;
+import MQ.Storage.MessageNumberRecords.RecordsUtil;
 import MQ.Storage.MessageStorageStructure;
 import MQ.Storage.MessageNumberRecords.SqlDBUtil;
 import com.github.zkclient.ZkClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -20,11 +22,11 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 @Service
 public class MessageQueueMap {
-    private static SqlDBUtil sqlDBUtil;
+    private static RecordsUtil recordsUtil;
     private static MessageStorageStructure messageStorageStructure;
-    @Autowired
-    public void setSqlDBUtil(SqlDBUtil db){
-        sqlDBUtil = db;
+    @Resource(name = "redis")
+    public void setSqlDBUtil(RecordsUtil records){
+        recordsUtil = records;
     }
     @Autowired
     public void setMessageStorageStructure(MessageStorageStructure mss){
@@ -55,7 +57,7 @@ public class MessageQueueMap {
          * 每产生一个队列就产生对应的BrokerPush线程进行消息的推送
          */
         try {
-            new BrokerPush(zkClient,topic_patition,q,sqlDBUtil).start();
+            new BrokerPush(zkClient,topic_patition,q,recordsUtil).start();
         } catch (Exception e) {
             e.printStackTrace();
         }

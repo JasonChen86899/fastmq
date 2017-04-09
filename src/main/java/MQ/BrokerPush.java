@@ -5,6 +5,7 @@ import MQ.Consumer.ConsumerGroup;
 import MQ.Consumer.ConsumerRule;
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
+import MQ.Storage.MessageNumberRecords.RecordsUtil;
 import MQ.Storage.MessageNumberRecords.SqlDBUtil;
 import com.github.zkclient.ZkClient;
 import org.zeromq.ZMQ;
@@ -30,7 +31,7 @@ public class BrokerPush extends Thread {
     private HashMap<String,ZMQ.Socket> newGroupPushSockets;
     private HashMap<String,ZMQ.Socket> groupPushSockets;//对应 组名-对应消费者socket的map
     private HashMap<String,String> groupConsumerIpAddress;//对应 组名-这个组内的消费者Ip地址的map
-    private SqlDBUtil sqlDBUtil;
+    private RecordsUtil recordsUtil;
     /**
     public BrokerPush(String tcpAddress, int t, Queue messageQueue){//type 指的是ZMQ下面的传输方式
         this.mq = messageQueue;
@@ -54,7 +55,7 @@ public class BrokerPush extends Thread {
     }
      **/
 
-    public BrokerPush(ZkClient zkClient,String topic_patition, Queue messageQueue, SqlDBUtil sq) throws Exception {
+    public BrokerPush(ZkClient zkClient,String topic_patition, Queue messageQueue, RecordsUtil rec) throws Exception {
         String[] a = topic_patition.split("_");
         if(a.length!=2) {
             this.topicName = a[0];
@@ -68,7 +69,7 @@ public class BrokerPush extends Thread {
             sameTopicGroupPub(zkClient, topic_patition, topicName);
             this.mq = messageQueue;
             this.changeFlag = false;
-            this.sqlDBUtil = sq;
+            this.recordsUtil = rec;
         }else
             throw new Exception("初始化错误");
 }
@@ -109,7 +110,7 @@ public class BrokerPush extends Thread {
                      );
                     }
                     sendToGroup(SerializationUtil.serialize((KeyMessage<Object,Object>)mq.poll()));
-                    sqlDBUtil.selectMessageNumByKeyAndUpdateNum(topicName+"_"+patition,"commited_num");
+                    recordsUtil.selectMessageNumByKeyAndUpdateNum(topicName+"_"+patition,"commited_num");
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
