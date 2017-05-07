@@ -73,6 +73,9 @@ public class BrokerPullSingleton extends Thread {
             }
             MessageQueueMap.getByName(a).add(b);
             */
+            //判断生产者的消息所属主题是否创建，如果没创建则不进行存储和分发
+            if(!judgeIfTopicExist(msg))
+                msg = null;
             if(msg!=null) {
                 if (synStorage == true) {
                     //开始将信息进行存储,同步刷盘
@@ -138,5 +141,10 @@ public class BrokerPullSingleton extends Thread {
                 }
             }
         }
+    }
+
+    private boolean judgeIfTopicExist(KeyMessage keyMessage){
+        List<String> children = zkClient.getChildren("/Consumer/Topic");
+        return !(children.stream().noneMatch(each -> each.equals(keyMessage.getTopic_name())));
     }
 }

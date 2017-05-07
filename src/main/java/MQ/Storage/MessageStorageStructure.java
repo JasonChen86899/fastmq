@@ -110,4 +110,5 @@ public class MessageStorageStructure {
     private KeyMessage<String,Object> rePackageKeyMessage(String newKey,KeyMessage<String,Object> oldKeyMessage){
         return new KeyMessage<>(newKey,oldKeyMessage,oldKeyMessage.getTopic_name());
     }
+
 }

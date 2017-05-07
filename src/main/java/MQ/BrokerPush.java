@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.LockSupport;
 
 
@@ -32,6 +33,7 @@ public class BrokerPush extends Thread {
     private HashMap<String,ZMQ.Socket> groupPushSockets;//对应 组名-对应消费者socket的map
     private HashMap<String,String> groupConsumerIpAddress;//对应 组名-这个组内的消费者Ip地址的map
     private RecordsUtil recordsUtil;
+    private ExecutorService exec;
     /**
     public BrokerPush(String tcpAddress, int t, Queue messageQueue){//type 指的是ZMQ下面的传输方式
         this.mq = messageQueue;
@@ -70,6 +72,7 @@ public class BrokerPush extends Thread {
             this.mq = messageQueue;
             this.changeFlag = false;
             this.recordsUtil = rec;
+            this.exec = Executors.newCachedThreadPool();
         }else
             throw new Exception("初始化错误");
 }
@@ -174,11 +177,31 @@ public class BrokerPush extends Thread {
 
     private void sendToGroup(byte[] sendData){
         //pushSockets.stream().filter((each) -> flag == true).forEach((socket) -> socket.send(sendData));
+        //ExecutorService exec = Executors.newCachedThreadPool();
         groupPushSockets.entrySet().forEach((entry) -> {
-            if(!entry.getValue().send(sendData)){
-                while (!newGroupPushSockets.get(entry.getKey()).send(sendData)){
-                    LockSupport.parkNanos(1000000000);
+            Future<String> receiveFlag = exec.submit(()->{
+                if(!entry.getValue().send(sendData)){
+                    while (!newGroupPushSockets.get(entry.getKey()).send(sendData)){
+                        LockSupport.parkNanos(1000000000);
+                    }
                 }
+                return new String(entry.getValue().recv());
+            });
+            try {
+                if(receiveFlag.get(5, TimeUnit.SECONDS).equals("successs")){
+                    while(!exec.submit(()->{
+                        while (!newGroupPushSockets.get(entry.getKey()).send(sendData)){
+                            LockSupport.parkNanos(1000000000);
+                        }
+                        return new String(newGroupPushSockets.get(entry.getKey()).recv());
+                    }).get(5,TimeUnit.SECONDS).equals("success"));
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (TimeoutException e) {
+                e.printStackTrace();
             }
         });
     }
