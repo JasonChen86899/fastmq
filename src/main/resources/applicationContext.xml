@@ -20,9 +20,6 @@
         <constructor-arg index="0">
             <value>tcp://localhost:8889</value>
         </constructor-arg>
-        <constructor-arg index="1">
-            <value>tcp://localhost:8888</value>
-        </constructor-arg>
     </bean>
 
     <bean id="setupFastMQ" class="MQ.Cluster.SetupFastMQ">

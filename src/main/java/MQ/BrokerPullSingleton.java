@@ -25,25 +25,22 @@ public class BrokerPullSingleton extends Thread {
     @Autowired
     private MessageQueueMap messageQueueMap;
     private String tcpAddress;
-    private String serviceAddress;
     private ZMQ.Context context;
     private ZMQ.Socket puller;
-    public BrokerPullSingleton(String adr,String serveradr){
+    public BrokerPullSingleton(String adr){
         flag = true;
         synStorage = true;//默认是true
         this.tcpAddress = adr;
-        this.serviceAddress = serveradr;
         context = ZMQ.context(1);
         puller = context.socket(ZMQ.PULL);
         puller.bind(tcpAddress);
     }
 
-    public BrokerPullSingleton(String adr,String serveradr,boolean synStorageFlag){
+    public BrokerPullSingleton(String adr,boolean synStorageFlag){
         flag = true;
         synStorage = synStorageFlag;
         synStorage = true;
         this.tcpAddress = adr;
-        this.serviceAddress = serveradr;
         context = ZMQ.context(1);
         puller = context.socket(ZMQ.PULL);
         puller.bind(tcpAddress);
