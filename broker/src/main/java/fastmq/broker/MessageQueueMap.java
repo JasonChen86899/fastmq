@@ -1,9 +1,9 @@
-package MQ;
+package fastmq.broker;
 
-import MQ.Message.KeyMessage;
-import MQ.Storage.MessageNumberRecords.RecordsUtil;
-import MQ.Storage.MessageStorageStructure;
 import com.github.zkclient.ZkClient;
+import fastmq.broker.message.KeyMessage;
+import fastmq.broker.storage.MessageStorageStructure;
+import fastmq.broker.storage.messagenumberrecords.RecordsUtil;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.PriorityBlockingQueue;

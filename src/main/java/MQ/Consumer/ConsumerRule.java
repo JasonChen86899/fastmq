@@ -73,4 +73,54 @@ public class ConsumerRule {
             e.printStackTrace();
         }
     }
+
+    public static void OrderedConsumerRule(String topic, ConsumerGroup group){
+        if(zkClient.exists("Consumer/Group/"+group.getName()+"/collateMap")){
+            HashMap<String,List<String>> changeIp_topicpatitionList = new HashMap<>();
+            try {
+                HashMap<String,List<String>> old_consumerip_List_topicPatition = (HashMap<String,List<String>>)SerializationUtil.deserialize(zkClient.readData("Consumer/Group/"+group.getName()+"/collateMap"));
+                if(group.getConsumerIpList().size()<old_consumerip_List_topicPatition.size()) {//下线
+                    old_consumerip_List_topicPatition.forEach((key, value) -> {
+                        if (!group.getConsumerIpList().contains(key)) {//找出下线的consumer ip
+                            changeIp_topicpatitionList.put(key,value);
+                        }
+                    });
+                    changeIp_topicpatitionList.forEach((key, value) -> {
+                        old_consumerip_List_topicPatition.remove(key);
+                        int new_consumer_size = group.getConsumerIpList().size();
+                        if(value.size()<=new_consumer_size){
+                            for(int i=0; i<value.size(); i++){
+                                old_consumerip_List_topicPatition.get(group.getConsumerIpList().get(i)).add(value.get(i));
+                            }
+                        }else{
+                            int mul = value.size()/new_consumer_size;
+                            int mod = value.size()%new_consumer_size;
+                            for(int i=0; i<new_consumer_size; i++){
+                                for(int j=0; j<mul; j++) {
+                                    old_consumerip_List_topicPatition.get(group.getConsumerIpList().get(i)).add(value.get(i+j*new_consumer_size));
+                                }
+                            }
+                            for(int i=mod-1; i>=0; i--){
+                                old_consumerip_List_topicPatition.get(group.getConsumerIpList().get(i)).add(value.get(value.size()-i-1));
+                            }
+                        }
+                    });
+                }else{//增加
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else
+            DefalutConsumerRule(topic, group);
+
+
+    }
+    public static void ConsistentHashConsumerRule(){
+
+    }
+
+    private static void HashFunction(){
+
+    }
 }
