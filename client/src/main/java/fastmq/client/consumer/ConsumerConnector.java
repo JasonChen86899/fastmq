@@ -2,6 +2,7 @@ package fastmq.client.consumer;
 
 import MQ.patition.PatitionCollate;
 import com.github.zkclient.ZkClient;
+import fastmq.client.consumer.serialization.ConsumerSerialization;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
@@ -14,11 +15,13 @@ public class ConsumerConnector {
 
   private ConsumerConfig consumerConfig;
   private ZkClient zkClient;
+  private ConsumerSerialization consumerSerialization;
 
-  public ConsumerConnector(ConsumerConfig config) {
+  public ConsumerConnector(ConsumerConfig config,ConsumerSerialization cs) {
     this.consumerConfig = config;
     String Zkservers = consumerConfig.getPropertiesMap().get("zk.connect");
     this.zkClient = new ZkClient(Zkservers, 10000, 10000);
+    this.consumerSerialization = cs;
   }
 
   /**
@@ -56,20 +59,20 @@ public class ConsumerConnector {
           consumeripList.add(consumerIp);
           try {
             zkClient.writeData("/Consumer/Group/" + group + "/ids",
-                SerializationUtil.serialize(consumeripList));
+                consumerSerialization.encode(consumeripList));
           } catch (IOException e) {
             e.printStackTrace();
           }
         } else {
           try {
-            HashSet<String> consumeripList = (HashSet<String>) SerializationUtil
-                .deserialize(zkClient.readData("/Consumer/Group/" + group + "/ids"));
+            HashSet<String> consumeripList = (HashSet<String>) consumerSerialization
+                .decode(zkClient.readData("/Consumer/Group/" + group + "/ids"));
             if (consumeripList.contains(consumerIp)) {
               continue;
             }
             consumeripList.add(consumerIp);
             zkClient.writeData("/Consumer/Group/" + group + "/ids",
-                SerializationUtil.serialize(consumeripList));
+                consumerSerialization.encode(consumeripList));
           } catch (Exception e) {
             e.printStackTrace();
           }

@@ -25,6 +25,7 @@
     <hessian.version>4.0.38</hessian.version>
     <HikariCP.version>2.5.1</HikariCP.version>
     <postgresql.version>9.4.1212.jre7</postgresql.version>
+    <netty.version>4.1.12.Final</netty.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -119,6 +120,12 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>${postgresql.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-all</artifactId>
+        <version>${netty.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
