@@ -34,7 +34,7 @@ public abstract class NettyRpcServer implements RpcServer {
         .option(ChannelOption.TCP_NODELAY,true)
         .option(ChannelOption.ALLOCATOR,PooledByteBufAllocator.DEFAULT)
         .handler(new LoggingHandler(LogLevel.INFO))
-        .childHandler()
+        .childHandler(NettyChannelInitializer.getInstance());
 
 
 

@@ -1,4 +1,4 @@
 .idea/
-FastMQ.iml
+*.iml
 target/
 lib/

@@ -1,16 +1,29 @@
 package fastmq.broker.communication.netty;
 
+import fastmq.broker.communication.netty.handler.RpcObjectHandler;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 
 /**
- * Description: Author: Jason Chen Date: 2018/7/9
+ * Author: Jason Chen Date: 2018/7/9
  */
+@Sharable
 public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+  private static final NettyChannelInitializer INSTANCE = new NettyChannelInitializer();
+
+  private NettyChannelInitializer() {
+
+  }
+
+  public static NettyChannelInitializer getInstance() {
+    return INSTANCE;
+  }
 
   @Override
   protected void initChannel(SocketChannel ch) throws Exception {
     ch.pipeline()
-        .addLast()
+        .addLast(RpcObjectHandler.getInstance());
   }
 }
