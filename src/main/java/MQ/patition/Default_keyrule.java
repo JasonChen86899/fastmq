@@ -7,4 +7,5 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class Default_keyrule implements KeyRule {
+
 }

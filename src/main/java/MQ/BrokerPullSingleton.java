@@ -1,5 +1,8 @@
 package MQ;
 
+import java.io.IOException;
+import java.util.List;
+
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
 import MQ.Storage.MessageStorageStructure;
@@ -8,18 +11,16 @@ import com.github.zkclient.ZkClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zeromq.ZMQ;
 
-import java.io.IOException;
-import java.util.List;
-
 /**
  * Created by Jason Chen on 2016/8/30.
  */
 
 public class BrokerPullSingleton extends Thread {
-    @Autowired
-    private ZkClient zkClient;
+
     boolean flag;//线程停止标志
     boolean synStorage;//刷盘标志，默认是true
+    @Autowired
+    private ZkClient zkClient;
     @Autowired
     private MessageStorageStructure messageStorage;
     @Autowired
@@ -27,7 +28,8 @@ public class BrokerPullSingleton extends Thread {
     private String tcpAddress;
     private ZMQ.Context context;
     private ZMQ.Socket puller;
-    public BrokerPullSingleton(String adr){
+
+    public BrokerPullSingleton(String adr) {
         flag = true;
         synStorage = true;//默认是true
         this.tcpAddress = adr;
@@ -36,7 +38,7 @@ public class BrokerPullSingleton extends Thread {
         puller.bind(tcpAddress);
     }
 
-    public BrokerPullSingleton(String adr,boolean synStorageFlag){
+    public BrokerPullSingleton(String adr, boolean synStorageFlag) {
         flag = true;
         synStorage = synStorageFlag;
         synStorage = true;
@@ -45,14 +47,15 @@ public class BrokerPullSingleton extends Thread {
         puller = context.socket(ZMQ.PULL);
         puller.bind(tcpAddress);
     }
-    public void run(){
-        while(flag){
+
+    public void run() {
+        while (flag) {
             //1KB的信息量,用来基本的信息传输，这个值是暂时的设定
             byte[] revice_bytes = new byte[1024];
-            puller.recv(revice_bytes,0,1024,1);
-            KeyMessage<String,Object> msg;
+            puller.recv(revice_bytes, 0, 1024, 1);
+            KeyMessage<String, Object> msg;
             try {
-                msg = (KeyMessage<String,Object>)SerializationUtil.deserialize(revice_bytes);
+                msg = (KeyMessage<String, Object>) SerializationUtil.deserialize(revice_bytes);
             } catch (IOException e) {
                 msg = null;
             }
@@ -71,9 +74,10 @@ public class BrokerPullSingleton extends Thread {
             MessageQueueMap.getByName(a).add(b);
             */
             //判断生产者的消息所属主题是否创建，如果没创建则不进行存储和分发
-            if(!judgeIfTopicExist(msg))
+            if (!judgeIfTopicExist(msg)) {
                 msg = null;
-            if(msg!=null) {
+            }
+            if (msg != null) {
                 if (synStorage == true) {
                     //开始将信息进行存储,同步刷盘
                     if (messageStorage.sycSaveMessage(msg)) {
@@ -97,15 +101,15 @@ public class BrokerPullSingleton extends Thread {
                             }
                         }.start();
                         try {
-                            if(tcpAddress == PatitionCollate.getIpAddressByTopicPatition(msg.getTopic_name(),msg)){
-                                new PutMessageToQueue(msg,messageQueueMap).start();
+                            if (tcpAddress == PatitionCollate.getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
+                                new PutMessageToQueue(msg, messageQueueMap).start();
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
                 }
-                if(synStorage == false) {
+                if (synStorage == false) {
                     //异步刷盘,这里的异步刷盘只是DB的异步，真正的异步需要别的方案，要好好想想
                     if (messageStorage.asycSaveMessage(msg)) {
                         //开启一个线程，向其他MQ机器传输消息
@@ -140,7 +144,7 @@ public class BrokerPullSingleton extends Thread {
         }
     }
 
-    private boolean judgeIfTopicExist(KeyMessage keyMessage){
+    private boolean judgeIfTopicExist(KeyMessage keyMessage) {
         List<String> children = zkClient.getChildren("/Consumer/Topic");
         return !(children.stream().noneMatch(each -> each.equals(keyMessage.getTopic_name())));
     }

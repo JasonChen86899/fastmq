@@ -13,16 +13,19 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(value = SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = "classpath:applicationContext.xml")
 public class ServerSetup {
+
     @Autowired
     private MQService mqService;
-    @Test
-    public void test(){
-        mqService.start();
-    }
-    public static void main(String[] args){
+
+    public static void main(String[] args) {
         ApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:applicationContext.xml");
-        MQService mqs = (MQService)applicationContext.getBean("mqService");
+        MQService mqs = (MQService) applicationContext.getBean("mqService");
         mqs.start();
         //mqService.start();
+    }
+
+    @Test
+    public void test() {
+        mqService.start();
     }
 }

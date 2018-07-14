@@ -1,5 +1,7 @@
 package MQ;
 
+import java.io.IOException;
+
 import MQ.Message.KeyMessage;
 import MQ.Serialization.SerializationUtil;
 import MQ.Storage.MessageStorageStructure;
@@ -8,13 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.zeromq.ZMQ;
 
-import java.io.IOException;
-
 /**
  * Created by Jason Chen on 2016/10/21.
  */
 @Service
 public class ReceiveFromLeader extends Thread {
+
     @Autowired
     private MessageStorageStructure messageStorage;
     @Autowired
@@ -25,7 +26,8 @@ public class ReceiveFromLeader extends Thread {
     private int type;
     private ZMQ.Context context;
     private ZMQ.Socket transfer;
-    public ReceiveFromLeader(String ipAddress, int t, boolean syn){
+
+    public ReceiveFromLeader(String ipAddress, int t, boolean syn) {
         this.flag = true;
         this.synStorage = true;//默认是true
         this.tcp = ipAddress;
@@ -34,18 +36,19 @@ public class ReceiveFromLeader extends Thread {
         this.transfer = context.socket(type);
         transfer.bind(tcp);
     }
-    public void run(){
-        while(flag){
+
+    public void run() {
+        while (flag) {
             //1KB的信息量,用来基本的信息传输，这个值是暂时的设定
             byte[] revice_bytes = new byte[1024];
-            transfer.recv(revice_bytes,0,1024,1);
-            KeyMessage<String,Object> msg;
+            transfer.recv(revice_bytes, 0, 1024, 1);
+            KeyMessage<String, Object> msg;
             try {
-                msg = (KeyMessage<String,Object>) SerializationUtil.deserialize(revice_bytes);
+                msg = (KeyMessage<String, Object>) SerializationUtil.deserialize(revice_bytes);
             } catch (IOException e) {
                 msg = null;
             }
-            if(msg!=null) {
+            if (msg != null) {
                 if (synStorage == true) {
                     //开始将信息进行存储,同步刷盘
                     if (messageStorage.sycSaveMessage(msg)) {
@@ -74,7 +77,7 @@ public class ReceiveFromLeader extends Thread {
         }
     }
 
-    public void setFlag(boolean stop){
+    public void setFlag(boolean stop) {
         this.flag = stop;
     }
 }

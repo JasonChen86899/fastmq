@@ -1,11 +1,10 @@
 package MQ.Consumer;
 
-import MQ.Serialization.SerializationUtil;
-import com.github.zkclient.ZkClient;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import com.github.zkclient.ZkClient;
 
 /**
  * Created by Jason Chen on 2016/11/23.
@@ -18,7 +17,7 @@ public class ConsumerGroup {
 
     private HashMap<String, List> collateMap;
 
-    public ConsumerGroup(ZkClient zkClient,String path,String groupName) {
+    public ConsumerGroup(ZkClient zkClient, String path, String groupName) {
         this.name = groupName;
         this.consumerIpList = new ArrayList<>(zkClient.getChildren(path));
         this.collateMap = new HashMap<>();
@@ -41,7 +40,7 @@ public class ConsumerGroup {
         this.collateMap = collateMap;
     }
 
-    public String getName(){
+    public String getName() {
         return this.name;
     }
 }

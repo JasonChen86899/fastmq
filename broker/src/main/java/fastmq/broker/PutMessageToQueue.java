@@ -7,17 +7,17 @@ import fastmq.broker.message.KeyMessage;
  */
 public class PutMessageToQueue extends Thread {
 
-  private MessageQueueMap messageQueueMap;
-  private KeyMessage keyMessage;
+    private MessageQueueMap messageQueueMap;
+    private KeyMessage keyMessage;
 
-  public PutMessageToQueue(KeyMessage kvKeyMessage, MessageQueueMap messageQueueMap) {
-    this.keyMessage = kvKeyMessage;
-    this.messageQueueMap = messageQueueMap;
-  }
+    public PutMessageToQueue(KeyMessage kvKeyMessage, MessageQueueMap messageQueueMap) {
+        this.keyMessage = kvKeyMessage;
+        this.messageQueueMap = messageQueueMap;
+    }
 
-  public void run() {
-    //根据 主题_分区号 进行阻塞队列分别
-    messageQueueMap.getQueueByName(keyMessage.getTopic_name() + "_" + keyMessage.getPatition())
-        .add(keyMessage);
-  }
+    public void run() {
+        //根据 主题_分区号 进行阻塞队列分别
+        messageQueueMap.getQueueByName(keyMessage.getTopic_name() + "_" + keyMessage.getPatition())
+            .add(keyMessage);
+    }
 }

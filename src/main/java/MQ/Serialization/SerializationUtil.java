@@ -1,16 +1,17 @@
 package MQ.Serialization;
 
-import com.caucho.hessian.io.Hessian2Input;
-import com.caucho.hessian.io.Hessian2Output;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+
+import com.caucho.hessian.io.Hessian2Input;
+import com.caucho.hessian.io.Hessian2Output;
 
 /**
  * Created by Jason Chen on 2016/10/17.
  */
 public class SerializationUtil {
+
     public static byte[] serialize(Object object) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         Hessian2Output hessian2Output = new Hessian2Output();

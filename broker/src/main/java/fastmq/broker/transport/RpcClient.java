@@ -1,7 +1,7 @@
-package fastmq.broker.communication;
+package fastmq.broker.transport;
 
 public interface RpcClient extends RpcCommunication {
 
-  void startClient();
+    void startClient();
 
 }

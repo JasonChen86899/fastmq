@@ -8,16 +8,15 @@ import java.util.Map;
 
 /**
  * 消息的数据结构格式
- * @param <K>
- * @param <V>
  */
-public class KeyMessage<K,V> implements Map.Entry<K,V> ,Comparable<KeyMessage<K,V>>{
+public class KeyMessage<K, V> implements Map.Entry<K, V>, Comparable<KeyMessage<K, V>> {
+
+    private final String topic_name;
     private K key;
     private V value;
-    private final String topic_name;
     private int patition;
 
-    public KeyMessage(K k, V v, String tn){
+    public KeyMessage(K k, V v, String tn) {
         key = k;
         value = v;
         topic_name = tn;
@@ -26,6 +25,10 @@ public class KeyMessage<K,V> implements Map.Entry<K,V> ,Comparable<KeyMessage<K,
     @Override
     public K getKey() {
         return key;
+    }
+
+    public void setKey(K key) {
+        this.key = key;
     }
 
     @Override
@@ -39,23 +42,21 @@ public class KeyMessage<K,V> implements Map.Entry<K,V> ,Comparable<KeyMessage<K,
         return value;
     }
 
-    public void setKey(K key) {
-        this.key = key;
-    }
-
     public String getTopic_name() {
         return topic_name;
     }
 
     @Override
     public int compareTo(KeyMessage<K, V> o) {
-        String key1 = (String)this.key;
-        String key2 = (String)o.getKey();
-        if(Integer.valueOf(key1.split("_")[1]).compareTo(Integer.valueOf(key2.split("_")[1]))>0)
+        String key1 = (String) this.key;
+        String key2 = (String) o.getKey();
+        if (Integer.valueOf(key1.split("_")[1]).compareTo(Integer.valueOf(key2.split("_")[1])) > 0) {
             return 1;
-        else if(Integer.valueOf(key1.split("_")[1]).compareTo(Integer.valueOf(key2.split("_")[1]))==0)
+        } else if (Integer.valueOf(key1.split("_")[1]).compareTo(Integer.valueOf(key2.split("_")[1])) == 0) {
             return 0;
-        else return -1;
+        } else {
+            return -1;
+        }
     }
 
     public int getPatition() {

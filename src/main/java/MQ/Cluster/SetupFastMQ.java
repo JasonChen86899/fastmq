@@ -1,14 +1,14 @@
 package MQ.Cluster;
 
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+
 import MQ.MQService;
 import MQ.ReceiveFromLeader;
 import com.github.zkclient.IZkDataListener;
 import com.github.zkclient.exception.ZkNoNodeException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.zeromq.ZMQ;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by Jason Chen on 2016/9/8.
@@ -18,6 +18,7 @@ import java.util.concurrent.CountDownLatch;
  * 每台MQServer需要启动这样一个线程，用来监听ZKClient的消息，以便PullSingleton线程消失，重新起一个线程
  */
 public class SetupFastMQ extends Thread {
+
     @Autowired
     private MQService FastMQ;
     @Autowired
@@ -47,7 +48,7 @@ public class SetupFastMQ extends Thread {
         //非Leader机器需要开启一个接受pull线程传送的数据的线程
         //ReceiveFromLeader receiveFromPullSingleton = new ReceiveFromLeader(ipAddress,ZMQ.PULL,true);
         receiveFromPullSingleton.start();
-        while(!tryGetLock()){
+        while (!tryGetLock()) {
             //自旋
         }
         FastMQ.start();
@@ -78,8 +79,9 @@ public class SetupFastMQ extends Thread {
                 //当等于0时表示可以取到锁
                 int isGetTheLock = mqServer.indexOf(ipAddress);
                 //网络闪断
-                if (isGetTheLock < 0)
+                if (isGetTheLock < 0) {
                     throw new ZkNoNodeException("节点没有找到" + ipAddress);
+                }
                 if (isGetTheLock == 0) {
                     return true;
                 }
@@ -89,14 +91,15 @@ public class SetupFastMQ extends Thread {
                     public void handleDataChange(String dataPath, byte[] data) throws Exception {
 
                     }
+
                     public void handleDataDeleted(String dataPath) throws Exception {
                         latch.countDown();
                     }
                 };
-                ClusterManager.getZkClient().subscribeDataChanges("/MQServers/"+preNodeipAddress,iZkDataListener);
+                ClusterManager.getZkClient().subscribeDataChanges("/MQServers/" + preNodeipAddress, iZkDataListener);
                 latch.await();
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }

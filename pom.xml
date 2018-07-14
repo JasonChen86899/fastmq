@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>JasonChen</groupId>
-  <artifactId>FastMQ</artifactId>
+  <artifactId>fastmq-all</artifactId>
   <packaging>pom</packaging>
-  <version>1.0-SNAPSHOT</version>
+  <version>${project.version}</version>
+  
   <modules>
     <module>cluster</module>
     <module>broker</module>
     <module>client</module>
+    <module>common</module>
   </modules>
 
   <properties>
+    <project.version>1.0-SNAPSHOT</project.version>
     <java.version>1.8</java.version>
     <spring.version>4.2.4.RELEASE</spring.version>
     <junit.version>RELEASE</junit.version>
@@ -26,6 +29,8 @@
     <HikariCP.version>2.5.1</HikariCP.version>
     <postgresql.version>9.4.1212.jre7</postgresql.version>
     <netty.version>4.1.12.Final</netty.version>
+    <commons-lang3.version>3.3.2</commons-lang3.version>
+    <commonsIO.version>2.5.0</commonsIO.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -126,6 +131,18 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-all</artifactId>
         <version>${netty.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang3.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commonsIO.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

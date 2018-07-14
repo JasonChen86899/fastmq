@@ -1,14 +1,13 @@
 package fastmq.broker.patition;
 
 /**
- *
  * Author: Jason Chen Date: 2018/7/8
  */
-public class PatitionCollateRpcImpl extends Thread{
+public class PatitionCollateRpcImpl extends Thread {
 
-  private
+    private
 
-  public void run(){
+    public void run() {
 
-  }
+    }
 }
