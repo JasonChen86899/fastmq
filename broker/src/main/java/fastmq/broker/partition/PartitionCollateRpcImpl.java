@@ -1,9 +1,9 @@
-package fastmq.broker.patition;
+package fastmq.broker.partition;
 
 /**
  * Author: Jason Chen Date: 2018/7/8
  */
-public class PatitionCollateRpcImpl extends Thread {
+public class PartitionCollateRpcImpl extends Thread {
 
     private
 

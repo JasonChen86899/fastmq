@@ -4,6 +4,7 @@ import fastmq.broker.transport.netty.handler.RpcObjectHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 
 /**
  * Author: Jason Chen Date: 2018/7/9

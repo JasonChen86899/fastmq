@@ -30,7 +30,8 @@
     <postgresql.version>9.4.1212.jre7</postgresql.version>
     <netty.version>4.1.12.Final</netty.version>
     <commons-lang3.version>3.3.2</commons-lang3.version>
-    <commonsIO.version>2.5.0</commonsIO.version>
+    <commonsIO.version>2.6</commonsIO.version>
+    <logger.version>1.8.0-beta2</logger.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -107,7 +108,6 @@
         <version>${rocksdb.version}</version>
       </dependency>
 
-      <!-- https://mvnrepository.com/artifact/com.caucho/hessian -->
       <dependency>
         <groupId>com.caucho</groupId>
         <artifactId>hessian</artifactId>
@@ -143,6 +143,12 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commonsIO.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${logger.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

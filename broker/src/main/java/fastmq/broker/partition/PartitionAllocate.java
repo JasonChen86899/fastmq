@@ -1,4 +1,4 @@
-package fastmq.broker.patition;
+package fastmq.broker.partition;
 
 /**
  * Created by Jason Chen on 2016/10/2.
@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
  * 分区策略
  */
 @Component
-public class PatitionCollate {
+public class PartitionAllocate {
 
     private static AtomicInteger expectedVersion = new AtomicInteger(0);
 
@@ -41,7 +41,7 @@ public class PatitionCollate {
      */
     @Autowired
     public static void setKeyRule(KeyRule keyRule) {
-        PatitionCollate.keyRule = keyRule;
+        PartitionAllocate.keyRule = keyRule;
     }
 
     /**
@@ -197,7 +197,7 @@ public class PatitionCollate {
      */
     @Autowired
     public void setZkClient(ZkClient zkClient) {
-        PatitionCollate.zkClient = zkClient;
+        PartitionAllocate.zkClient = zkClient;
     }
 
 }

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.github.zkclient.ZkClient;
 import fastmq.broker.message.KeyMessage;
-import fastmq.broker.patition.PatitionCollate;
+import fastmq.broker.partition.PartitionAllocate;
 import fastmq.broker.serialization.SerializationUtil;
 import fastmq.broker.storage.MessageStorageStructure;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,7 +101,7 @@ public class BrokerPullSingleton extends Thread {
                             }
                         }.start();
                         try {
-                            if (tcpAddress == PatitionCollate
+                            if (tcpAddress == PartitionAllocate
                                 .getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
                                 new PutMessageToQueue(msg, messageQueueMap).start();
                             }
@@ -133,7 +133,7 @@ public class BrokerPullSingleton extends Thread {
                             }
                         }.start();
                         try {
-                            if (tcpAddress == PatitionCollate
+                            if (tcpAddress == PartitionAllocate
                                 .getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
                                 new PutMessageToQueue(msg, messageQueueMap).start();
                             }

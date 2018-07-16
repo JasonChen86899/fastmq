@@ -1,6 +1,7 @@
 package fastmq.broker.transport.netty.handler;
 
 import com.github.zkclient.ZkClient;
+import fastmq.broker.transport.netty.handler.allocate.AllocateHandler;
 import fastmq.common.netty.dto.RpcObject;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -44,8 +45,8 @@ public class BusinessHandler implements ChannelInboundHandler {
 
         switch (dto.getOrderEnum()) {
             case ALLOCATE:
-
-
+                AllocateHandler.getInstance(zkClient);
+                break;
         }
 
     }

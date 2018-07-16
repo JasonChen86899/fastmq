@@ -3,7 +3,7 @@ package fastmq.broker;
 import java.io.IOException;
 
 import fastmq.broker.message.KeyMessage;
-import fastmq.broker.patition.PatitionCollate;
+import fastmq.broker.partition.PartitionAllocate;
 import fastmq.broker.serialization.SerializationUtil;
 import fastmq.broker.storage.MessageStorageStructure;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +53,8 @@ public class ReceiveFromLeader extends Thread {
                     //开始将信息进行存储,同步刷盘
                     if (messageStorage.sycSaveMessage(msg)) {
                         try {
-                            if (tcp == PatitionCollate.getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
+                            if (tcp == PartitionAllocate
+                                .getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
                                 new PutMessageToQueue(msg, messageQueueMap).start();
                             }
                         } catch (IOException e) {
@@ -65,7 +66,8 @@ public class ReceiveFromLeader extends Thread {
                     //异步刷盘,这里的异步刷盘只是DB的异步，真正的异步需要别的方案，要好好想想
                     if (messageStorage.asycSaveMessage(msg)) {
                         try {
-                            if (tcp == PatitionCollate.getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
+                            if (tcp == PartitionAllocate
+                                .getIpAddressByTopicPatition(msg.getTopic_name(), msg)) {
                                 new PutMessageToQueue(msg, messageQueueMap).start();
                             }
                         } catch (IOException e) {

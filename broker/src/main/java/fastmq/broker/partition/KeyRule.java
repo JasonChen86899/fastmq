@@ -1,4 +1,4 @@
-package fastmq.broker.patition;
+package fastmq.broker.partition;
 
 import fastmq.broker.message.KeyMessage;
 
