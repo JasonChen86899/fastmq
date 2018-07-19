@@ -1,6 +1,6 @@
 package fastmq.common.rpc;
 
-public interface RpcServer extends RpcTransaction {
+public interface RpcServer {
 
     void startService() throws Exception;
 

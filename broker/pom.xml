@@ -20,6 +20,12 @@
     </dependency>
 
     <dependency>
+      <groupId>JasonChen</groupId>
+      <artifactId>fastmq-cluster</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
