@@ -34,7 +34,7 @@ public abstract class NettyRpcServer implements RpcServer {
         }
 
         //此处系统由于是在Linux执行所以选择Epoll，没有选择通用NioEventLoopGroup
-        EpollEventLoopGroup bossGroup = new EpollEventLoopGroup(1);
+        EpollEventLoopGroup bossGroup = new EpollEventLoopGroup(bossThreads);
         EpollEventLoopGroup worksGroup = new EpollEventLoopGroup(workThreads);
 
         try {
@@ -58,15 +58,4 @@ public abstract class NettyRpcServer implements RpcServer {
             worksGroup.shutdownGracefully().sync();
         }
     }
-
-    @Override
-    public void send(Object object) {
-
-    }
-
-    @Override
-    public Object receive() {
-        return null;
-    }
-
 }

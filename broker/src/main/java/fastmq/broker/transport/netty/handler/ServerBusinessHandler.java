@@ -10,14 +10,14 @@ import io.netty.channel.ChannelInboundHandler;
  * Author: Jason Chen Date: 2018/7/13
  */
 @Sharable
-public class BusinessHandler implements ChannelInboundHandler {
+public class ServerBusinessHandler implements ChannelInboundHandler {
 
-    private static BusinessHandler INSTANCE = new BusinessHandler();
+    private static ServerBusinessHandler INSTANCE = new ServerBusinessHandler();
 
-    private BusinessHandler() {
+    private ServerBusinessHandler() {
     }
 
-    public static BusinessHandler getInstance() {
+    public static ServerBusinessHandler getInstance() {
         return INSTANCE;
     }
 

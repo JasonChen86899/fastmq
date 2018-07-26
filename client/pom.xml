@@ -14,6 +14,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>JasonChen</groupId>
+      <artifactId>fastmq-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
@@ -62,9 +68,15 @@
       <groupId>org.zeromq</groupId>
       <artifactId>jeromq</artifactId>
     </dependency>
+
     <dependency>
       <groupId>com.github.adyliu</groupId>
       <artifactId>zkclient</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
     </dependency>
   </dependencies>
 

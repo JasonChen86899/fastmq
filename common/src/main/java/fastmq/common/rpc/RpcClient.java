@@ -1,6 +1,6 @@
 package fastmq.common.rpc;
 
-public interface RpcClient extends RpcTransaction {
+public interface RpcClient {
 
     void startClient();
 

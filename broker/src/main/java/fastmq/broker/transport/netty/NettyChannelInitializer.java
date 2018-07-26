@@ -1,7 +1,7 @@
 package fastmq.broker.transport.netty;
 
-import fastmq.broker.transport.netty.handler.BusinessHandler;
-import fastmq.broker.transport.netty.handler.RpcObjectHandler;
+import fastmq.broker.transport.netty.handler.ServerBusinessHandler;
+import fastmq.common.netty.handler.RpcObjectHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
@@ -26,6 +26,6 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline()
             .addLast(RpcObjectHandler.getInstance())
-            .addLast(BusinessHandler.getInstance());
+            .addLast(ServerBusinessHandler.getInstance());
     }
 }

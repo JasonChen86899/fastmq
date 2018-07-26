@@ -1,4 +1,4 @@
-package fastmq.broker.transport.netty.handler;
+package fastmq.common.netty.handler;
 
 import java.util.List;
 

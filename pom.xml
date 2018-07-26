@@ -30,6 +30,7 @@
     <postgresql.version>9.4.1212.jre7</postgresql.version>
     <netty.version>4.1.12.Final</netty.version>
     <commons-lang3.version>3.3.2</commons-lang3.version>
+    <commons-pools2.version>2.6.0</commons-pools2.version>
     <commonsIO.version>2.6</commonsIO.version>
     <logger.version>1.8.0-beta2</logger.version>
   </properties>
@@ -137,6 +138,12 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>${commons-lang3.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-pool2</artifactId>
+        <version>${commons-pools2.version}</version>
       </dependency>
 
       <dependency>
