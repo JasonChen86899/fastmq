@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import com.github.zkclient.ZkClient;
-import fastmq.broker.serialization.SerializationUtil;
+import fastmq.common.serialization.SerializationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

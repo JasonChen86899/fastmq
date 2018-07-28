@@ -17,7 +17,7 @@ import com.github.zkclient.ZkClient;
 import fastmq.broker.consumer.ConsumerGroup;
 import fastmq.broker.consumer.ConsumerRule;
 import fastmq.broker.message.KeyMessage;
-import fastmq.broker.serialization.SerializationUtil;
+import fastmq.common.serialization.SerializationUtil;
 import fastmq.broker.storage.messagenumberrecords.RecordsUtil;
 import org.zeromq.ZMQ;
 

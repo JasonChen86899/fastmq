@@ -1,4 +1,4 @@
-package fastmq.broker.serialization.hessian;
+package fastmq.common.serialization.hessian;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
-import fastmq.broker.serialization.Serializer;
+import fastmq.common.serialization.Serializer;
 import org.apache.commons.io.IOUtils;
 
 /**

@@ -18,7 +18,7 @@ public class NettyChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     }
 
-    public static NettyChannelInitializer getInstance() {
+    static NettyChannelInitializer getInstance() {
         return INSTANCE;
     }
 

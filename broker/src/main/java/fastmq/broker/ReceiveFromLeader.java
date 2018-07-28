@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import fastmq.broker.message.KeyMessage;
 import fastmq.broker.partition.PartitionAllocate;
-import fastmq.broker.serialization.SerializationUtil;
+import fastmq.common.serialization.SerializationUtil;
 import fastmq.broker.storage.MessageStorageStructure;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

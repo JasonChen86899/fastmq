@@ -1,7 +1,9 @@
 package fastmq.common.rpc;
 
+import java.net.SocketAddress;
+
 public interface RpcServer {
 
-    void startService() throws Exception;
+    void startService(SocketAddress bindedAddr) throws Exception;
 
 }

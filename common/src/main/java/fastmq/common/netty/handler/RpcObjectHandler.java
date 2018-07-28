@@ -2,7 +2,7 @@ package fastmq.common.netty.handler;
 
 import java.util.List;
 
-import fastmq.broker.serialization.SerializationUtil;
+import fastmq.common.serialization.SerializationUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,7 +16,7 @@ public class RpcObjectHandler extends ByteToMessageCodec<Object> {
 
     private static final int fastMqMagic = 0xfacd89;
 
-    private static RpcObjectHandler INSTANCE = new RpcObjectHandler();
+    private static final RpcObjectHandler INSTANCE = new RpcObjectHandler();
 
     private RpcObjectHandler() {
     }

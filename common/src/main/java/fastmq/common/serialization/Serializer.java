@@ -1,4 +1,4 @@
-package fastmq.broker.serialization;
+package fastmq.common.serialization;
 
 import java.io.IOException;
 

@@ -4,6 +4,6 @@ public interface RpcTransaction {
 
     void send(Object object,Object sender);
 
-    Object receive();
+    Object receive(Object receiver);
 
 }

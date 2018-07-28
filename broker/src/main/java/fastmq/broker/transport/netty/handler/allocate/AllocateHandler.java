@@ -53,12 +53,13 @@ public class AllocateHandler implements OrderHandler, RpcTransaction {
     }
 
     @Override
-    public void send(Object object,Object sender) {
-        ChannelHandlerContext ctx = (ChannelHandlerContext)sender;
+    public void send(final Object msg, final Object sender) {
+        ChannelHandlerContext ctx = (ChannelHandlerContext) sender;
+        ctx.writeAndFlush(msg);
     }
 
     @Override
-    public Object receive() {
+    public Object receive(Object receiver) {
         return null;
     }
 }
