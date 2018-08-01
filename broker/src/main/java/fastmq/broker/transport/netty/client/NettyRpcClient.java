@@ -1,6 +1,4 @@
-package fastmq.client.consumer.transport.netty;
-
-import java.net.SocketAddress;
+package fastmq.broker.transport.netty.client;
 
 import fastmq.common.rpc.RpcClient;
 import io.netty.bootstrap.Bootstrap;
@@ -13,6 +11,8 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.SocketAddress;
 
 /**
  * @Author: Goober Created in 2018/7/26
