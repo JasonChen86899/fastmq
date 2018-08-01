@@ -1,4 +1,4 @@
-package fastmq.broker.transport.netty.handler.allocate;
+package fastmq.broker.transport.netty.server.handler.allocate;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -6,7 +6,7 @@ import java.util.Objects;
 import com.github.zkclient.ZkClient;
 import fastmq.broker.partition.PartitionAllocate;
 import fastmq.broker.spring.SpringUtil;
-import fastmq.broker.transport.netty.handler.OrderHandler;
+import fastmq.broker.transport.netty.server.handler.OrderHandler;
 import fastmq.common.netty.dto.RpcObject;
 import fastmq.common.netty.dto.allocate.AllocateRpcObject;
 import fastmq.common.rpc.RpcTransaction;

@@ -1,4 +1,6 @@
-package fastmq.broker.transport.netty;
+package fastmq.broker.transport.netty.server;
+
+import java.net.SocketAddress;
 
 import fastmq.common.rpc.RpcServer;
 import io.netty.bootstrap.ServerBootstrap;
@@ -21,7 +23,7 @@ public abstract class NettyRpcServer implements RpcServer {
     private volatile Boolean ifServerOn;
 
     @Override
-    public void startService() throws Exception {
+    public void startService(SocketAddress serverAddr) throws Exception {
         if (ifServerOn) {
             return;
         } else {
@@ -49,7 +51,7 @@ public abstract class NettyRpcServer implements RpcServer {
                 .handler(new LoggingHandler(LogLevel.INFO))
                 .childHandler(NettyChannelInitializer.getInstance());
 
-            ChannelFuture channelFuture = serverBootstrap.bind(9090).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(serverAddr).sync();
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();

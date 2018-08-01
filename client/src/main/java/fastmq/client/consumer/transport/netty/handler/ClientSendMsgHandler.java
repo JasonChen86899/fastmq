@@ -1,8 +1,6 @@
 package fastmq.client.consumer.transport.netty.handler;
 
 import java.net.SocketAddress;
-import java.util.Objects;
-import java.util.Queue;
 import java.util.concurrent.SynchronousQueue;
 
 import io.netty.channel.ChannelHandler.Sharable;
@@ -17,7 +15,7 @@ import io.netty.channel.ChannelPromise;
 @Sharable
 public class ClientSendMsgHandler implements ChannelOutboundHandler {
 
-    private SynchronousQueue<Object> msgQueue;
+    private SynchronousQueue<Object> msgQueue = new SynchronousQueue<>();
 
     public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
 

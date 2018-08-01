@@ -6,6 +6,8 @@ import java.util.concurrent.SynchronousQueue;
 
 import fastmq.client.consumer.transport.netty.handler.ClientSendMsgHandler;
 import fastmq.common.rpc.RpcTransaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Description:
@@ -13,10 +15,21 @@ import fastmq.common.rpc.RpcTransaction;
  */
 public class ClientSender extends NettyRpcClient implements RpcTransaction {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ClientSender.class);
+
+    /**
+     * 客户端发送功能内的消息同步队列
+     */
     private SynchronousQueue<Object> queue;
 
+    /**
+     * 客户端启动线程
+     */
     private Thread rpcClientThread;
 
+    /**
+     * 服务器远程地址
+     */
     private SocketAddress remoteAddr;
 
     public ClientSender(SocketAddress remoteAddr) {
@@ -34,11 +47,16 @@ public class ClientSender extends NettyRpcClient implements RpcTransaction {
     }
 
     @Override
-    public void send(Object msg, Object sender) {
+    public boolean send(Object msg, Object sender) {
+        if (!rpcClientThread.isAlive()) {
+            return false;
+        }
         try {
             this.queue.put(msg);
+            return true;
         } catch (InterruptedException e) {
-
+            LOGGER.info("send operation has been interrupted.");
+            return false;
         }
     }
 

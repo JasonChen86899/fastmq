@@ -1,6 +1,6 @@
-package fastmq.broker.transport.netty;
+package fastmq.broker.transport.netty.server;
 
-import fastmq.broker.transport.netty.handler.ServerBusinessHandler;
+import fastmq.broker.transport.netty.server.handler.ServerBusinessHandler;
 import fastmq.common.netty.handler.RpcObjectHandler;
 import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelInitializer;
