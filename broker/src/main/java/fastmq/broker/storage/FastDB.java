@@ -1,11 +1,6 @@
 package fastmq.broker.storage;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-
-import com.caucho.hessian.io.Hessian2Input;
-import com.caucho.hessian.io.Hessian2Output;
+import fastmq.common.serialization.SerializationUtil;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.Options;
@@ -67,24 +62,16 @@ public class FastDB {
         if (db != null) {
             db.close();
         }
-        options.dispose();
+        options.close();
     }
 
-    //flag false 异步，true 同步
-    public boolean putObject(Object key, Object value, String topic_name, boolean flag)
-        throws IOException, RocksDBException {
-        ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
-        Hessian2Output hessian2Output = new Hessian2Output(byteArray);
-        hessian2Output.writeObject(key);
-        byte[] keyBytes = byteArray.toByteArray();
-        hessian2Output.reset();
-        hessian2Output.writeObject(value);
-        byte[] valueBytes = byteArray.toByteArray();
-        //db的open 静态方法有 关于初始化db时列簇和相应的列簇名的设置，不过也可以以后地动态添加
-        ColumnFamilyHandle cf = db
-            .createColumnFamily(new ColumnFamilyDescriptor(topic_name.getBytes()));
+    public boolean putObject(byte[] key, byte[] value, byte[] topicName, boolean flag) {
         try {
-            db.put(cf, new WriteOptions().setSync(flag), keyBytes, valueBytes);
+            //db的open 静态方法有 关于初始化db时列簇和相应的列簇名的设置，不过也可以以后地动态添加
+            ColumnFamilyHandle cf = db
+                .createColumnFamily(new ColumnFamilyDescriptor(topicName));
+            //存储数据
+            db.put(cf, new WriteOptions().setSync(flag), key, value);
             return true;
         } catch (Exception e) {
         /*
@@ -93,16 +80,24 @@ public class FastDB {
             columnFamily_Name_Map.put(topic_name, cf);
         }
         */
-            return true;
+            return false;
         }
     }
 
-    public Object getObject(String columFamily_topic_name, Object key)
-        throws IOException, RocksDBException {
-        ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
-        Hessian2Output hessian2Output = new Hessian2Output(byteArray);
-        hessian2Output.writeObject(key);
-        byte[] keyBytes = byteArray.toByteArray();
+    //flag false 异步，true 同步
+    public boolean putObject(Object key, Object value, String topicName, boolean flag) {
+        try {
+            byte[] keyBytes = SerializationUtil.serialize(key);
+            byte[] valueBytes = SerializationUtil.serialize(value);
+            return this.putObject(keyBytes, valueBytes, topicName.getBytes(), flag);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public Object getObject(String columFamily_topic_name, Object key) {
+        try {
+            byte[] keyBytes = SerializationUtil.serialize(key);
         /*
         if(columnFamily_Name_Map.containsKey(columFamily_topic_name)){
             byte[] bytes_get = db.get(columnFamily_Name_Map.get(columFamily_topic_name),keyBytes);
@@ -112,14 +107,15 @@ public class FastDB {
         }else
             return null;
         */
-        ColumnFamilyHandle cf = db
-            .createColumnFamily(new ColumnFamilyDescriptor(columFamily_topic_name.getBytes()));
-        byte[] bytes_get = db.get(cf, keyBytes);
-        if (bytes_get != null) {
-            ByteArrayInputStream byteArray_get = new ByteArrayInputStream(bytes_get);
-            Hessian2Input hessian2Input = new Hessian2Input(byteArray_get);
-            return hessian2Input.readObject();
-        } else {
+            ColumnFamilyHandle cf = db
+                .createColumnFamily(new ColumnFamilyDescriptor(columFamily_topic_name.getBytes()));
+            byte[] getBytes = db.get(cf, keyBytes);
+            if (getBytes != null) {
+                return SerializationUtil.deserialize(getBytes);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
             return null;
         }
     }

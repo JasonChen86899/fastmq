@@ -1,6 +1,11 @@
 package fastmq.broker.transport.netty.client.handler;
 
-import fastmq.common.netty.dto.RpcObject;
+import java.util.List;
+
+import fastmq.broker.message.KeyMessage;
+import fastmq.broker.spring.SpringUtil;
+import fastmq.broker.storage.FastDB;
+import io.netty.channel.ChannelHandler.Sharable;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandler;
 
@@ -9,6 +14,7 @@ import io.netty.channel.ChannelInboundHandler;
  * @author: Goober
  * @date: 2018/8/2
  */
+@Sharable
 public class ReceiveMsgFromLeaderHandler implements ChannelInboundHandler {
 
     @Override
@@ -33,7 +39,17 @@ public class ReceiveMsgFromLeaderHandler implements ChannelInboundHandler {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
+        FastDB fastDB = SpringUtil.getBean(FastDB.class);
+        if (msg instanceof List) {
+            List<KeyMessage<String, Object>> recList = (List<KeyMessage<String, Object>>) msg;
+            recList.forEach(e ->
+                fastDB.putObject(e.getKey(), e.getValue(), e.getTopicName(), true)
+            );
+        }
+        if (msg instanceof KeyMessage) {
+            KeyMessage<String, Object> recMsg = (KeyMessage<String, Object>) msg;
+            fastDB.putObject(recMsg.getKey(), recMsg.getValue(), recMsg.getTopicName(), true);
+        }
     }
 
     @Override

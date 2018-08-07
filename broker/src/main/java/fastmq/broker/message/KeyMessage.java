@@ -11,15 +11,15 @@ import java.util.Map;
  */
 public class KeyMessage<K, V> implements Map.Entry<K, V>, Comparable<KeyMessage<K, V>> {
 
-    private final String topic_name;
+    private final String topicName;
     private K key;
     private V value;
-    private int patition;
+    private int partition;
 
     public KeyMessage(K k, V v, String tn) {
         key = k;
         value = v;
-        topic_name = tn;
+        topicName = tn;
     }
 
     @Override
@@ -42,8 +42,8 @@ public class KeyMessage<K, V> implements Map.Entry<K, V>, Comparable<KeyMessage<
         return value;
     }
 
-    public String getTopic_name() {
-        return topic_name;
+    public String getTopicName() {
+        return topicName;
     }
 
     @Override
@@ -60,12 +60,12 @@ public class KeyMessage<K, V> implements Map.Entry<K, V>, Comparable<KeyMessage<
         }
     }
 
-    public int getPatition() {
-        return patition;
+    public int getPartition() {
+        return partition;
     }
 
-    public void setPatition(int patition) {
-        this.patition = patition;
+    public void setPartition(int partition) {
+        this.partition = partition;
     }
 
 }
