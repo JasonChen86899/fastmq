@@ -59,7 +59,7 @@ public class MessageStorageStructure {
     public boolean asycSaveMessage(KeyMessage<String, Object> keyMessage) {
         String storekey, a;
         //key =  keyMessage.getKey();
-        storekey = keyMessage.getTopic_name() + "_" + keyMessage.getPatition();
+        storekey = keyMessage.getTopicName() + "_" + keyMessage.getPatition();
         try {
             a = recordsUtil.selectMessageNumByKeyAndUpdateNum(storekey, "message_num");
         } catch (Exception e) {
@@ -69,7 +69,7 @@ public class MessageStorageStructure {
         storekey += "_" + a;
         final String final_key = storekey;
         Callable<Boolean> save = () -> fastDB
-            .putObject(final_key, keyMessage, keyMessage.getTopic_name(), false);
+            .putObject(final_key, keyMessage, keyMessage.getTopicName(), false);
         FutureTask<Boolean> futureTask = new FutureTask<>(save);
         new Thread(futureTask).start();
         //同步操等待阻塞
@@ -111,7 +111,7 @@ public class MessageStorageStructure {
 
     private KeyMessage<String, Object> rePackageKeyMessage(String newKey,
         KeyMessage<String, Object> oldKeyMessage) {
-        return new KeyMessage<>(newKey, oldKeyMessage, oldKeyMessage.getTopic_name());
+        return new KeyMessage<>(newKey, oldKeyMessage, oldKeyMessage.getTopicName());
     }
 
 }

@@ -1,5 +1,9 @@
 package fastmq.broker.message;
 
+import fastmq.common.serialization.SerializationUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Map;
 
 /**
@@ -11,12 +15,14 @@ import java.util.Map;
  */
 public class KeyMessage<K, V> implements Map.Entry<K, V>, Comparable<KeyMessage<K, V>> {
 
-    private final String topicName;
+    private static final Logger LOGGER = LoggerFactory.getLogger(KeyMessage.class);
+
+    private final byte[] topicName;
     private K key;
     private V value;
     private int partition;
 
-    public KeyMessage(K k, V v, String tn) {
+    public KeyMessage(K k, V v, byte[] tn) {
         key = k;
         value = v;
         topicName = tn;
@@ -43,7 +49,12 @@ public class KeyMessage<K, V> implements Map.Entry<K, V>, Comparable<KeyMessage<
     }
 
     public String getTopicName() {
-        return topicName;
+        try {
+            return (String)SerializationUtil.deserialize(topicName);
+        } catch (Exception e) {
+            LOGGER.error("KeyMessage topicName deserialize fail. key is {}",key);
+            return null;
+        }
     }
 
     @Override
